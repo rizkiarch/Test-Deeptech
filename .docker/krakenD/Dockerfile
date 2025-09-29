@@ -2,7 +2,7 @@
 FROM krakend:2.11
 
 # Set maintainer label
-LABEL maintainer="Developer <dev@example.com>"
+LABEL maintainer="Muhamad Rizki <muhamadrizki.dev@gmail.com>"
 
 # Copy KrakenD configuration
 COPY krakend.json /etc/krakend/krakend.json

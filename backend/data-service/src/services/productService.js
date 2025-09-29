@@ -30,13 +30,17 @@ class ProductService {
     }
 
     static async createProduct(productData, req) {
-        const { name, description, image, categoryId, stock } = productData;
+        const { name, description, image, categoryId, category_id, stock } = productData;
+        const finalCategoryId = categoryId || category_id;
 
-        if (!name || !categoryId) {
-            return { message: 'Name and category ID are required', statusCode: 400 };
+        switch (true) {
+            case !name:
+                return { message: 'Name is required', statusCode: 400 };
+            case !finalCategoryId:
+                return { message: 'Category ID is required', statusCode: 400 };
         }
 
-        const category = await CategoryModel.getCategoryById(categoryId);
+        const category = await CategoryModel.getCategoryById(finalCategoryId);
         if (!category) {
             return { message: 'Category not found', statusCode: 404 };
         }
@@ -45,7 +49,10 @@ class ProductService {
             return { message: 'Stock must be a non-negative number', statusCode: 400 };
         }
 
-        const productId = await ProductModel.createProduct(productData);
+        const productId = await ProductModel.createProduct({
+            ...productData,
+            categoryId: finalCategoryId
+        });
         const newProduct = await ProductModel.getProductById(productId);
 
         newProduct.image_url = newProduct.image ? getFileUrl(req, newProduct.image) : null;
@@ -67,10 +74,11 @@ class ProductService {
             return { message: 'Product not found', statusCode: 404 };
         }
 
-        const { name, description, image, categoryId, stock } = productData;
+        const { name, description, image, categoryId, category_id, stock } = productData;
+        const finalCategoryId = categoryId || category_id;
 
-        if (categoryId) {
-            const category = await CategoryModel.getCategoryById(categoryId);
+        if (finalCategoryId) {
+            const category = await CategoryModel.getCategoryById(finalCategoryId);
             if (!category) {
                 return { message: 'Category not found', statusCode: 404 };
             }
@@ -84,7 +92,10 @@ class ProductService {
             deleteFile(existingProduct.image);
         }
 
-        const updated = await ProductModel.updateProduct(id, productData);
+        const updated = await ProductModel.updateProduct(id, {
+            ...productData,
+            categoryId: finalCategoryId
+        });
         if (!updated) {
             return { message: 'Failed to update product', statusCode: 500 };
         }

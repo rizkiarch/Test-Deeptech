@@ -26,17 +26,19 @@ export interface Category {
     description: string;
     created_at: string;
     updated_at: string;
+    products?: Product[]; // Optional products array for show page
 }
 
 export interface Product {
     id: number;
     name: string;
-    description: string;
+    product_name: string;
+    description?: string;
     image?: string;
+    image_url?: string;
     category_id: number;
-    category?: Category;
+    category_name?: string;
     stock: number;
-    price?: number;
     created_at: string;
     updated_at: string;
 }
@@ -46,10 +48,9 @@ export interface Transaction {
     product_id: number;
     product?: Product;
     quantity: number;
-    amount?: number;
-    type: 'in' | 'out';
-    description?: string;
-    transaction_date?: string;
+    product_name?: string;
+    type: 'stock_in' | 'stock_out';
+    notes?: string;
     created_at: string;
     updated_at: string;
 }
@@ -86,19 +87,16 @@ export interface CategoryFormData {
 export interface ProductFormData {
     name: string;
     description: string;
-    categoryId: number;
+    category_id: number;
     stock: number;
-    price?: number;
     image?: File;
 }
 
 export interface TransactionFormData {
     product_id: number;
     quantity: number;
-    type: 'in' | 'out';
-    amount?: number;
-    description?: string;
-    transaction_date?: string;
+    type: 'stock_in' | 'stock_out';
+    notes?: string;
 }
 
 export interface Config {

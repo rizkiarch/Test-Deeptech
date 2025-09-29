@@ -5,6 +5,7 @@ import { useProducts } from '@/hooks/useApi';
 import ApiService from '@/services/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
+import NavHeader from '@/layouts/app/NavHeader';
 
 export default function TransactionsCreate() {
     const { user, logout } = useAuth();
@@ -18,11 +19,9 @@ export default function TransactionsCreate() {
 
     const [formData, setFormData] = useState<TransactionFormData>({
         product_id: 0,
-        type: 'in',
+        type: 'stock_in',
         quantity: 1,
-        amount: undefined,
-        description: '',
-        transaction_date: new Date().toISOString().split('T')[0], // Today's date
+        notes: '',
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -48,11 +47,10 @@ export default function TransactionsCreate() {
             setTimeout(() => {
                 setFormData({
                     product_id: 0,
-                    type: 'in',
+                    type: 'stock_in',
                     quantity: 1,
-                    amount: undefined,
-                    description: '',
-                    transaction_date: new Date().toISOString().split('T')[0],
+                    notes: '',
+
                 });
                 setSuccessMessage('');
             }, 2000);
@@ -79,8 +77,7 @@ export default function TransactionsCreate() {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'product_id' || name === 'quantity' ? parseInt(value) || 0 :
-                name === 'amount' ? (value ? parseFloat(value) : undefined) : value
+            [name]: name === 'product_id' || name === 'quantity' ? parseInt(value) : 0
         }));
 
         // Clear error for this field
@@ -95,44 +92,8 @@ export default function TransactionsCreate() {
 
             <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
                 {/* Navigation */}
-                <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between h-16">
-                            <div className="flex items-center space-x-8">
-                                <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
-                                    DeepTech
-                                </Link>
-                                <div className="flex space-x-4">
-                                    <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
-                                        Dashboard
-                                    </Link>
-                                    <Link href="/categories" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
-                                        Categories
-                                    </Link>
-                                    <Link href="/products" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
-                                        Products
-                                    </Link>
-                                    <Link href="/transactions" className="text-blue-600 font-medium">
-                                        Transactions
-                                    </Link>
-                                </div>
-                            </div>
-                            <div className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-4">
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                                        Welcome, {user?.name || `${user?.first_name} ${user?.last_name}`}
-                                    </span>
-                                    <button
-                                        onClick={logout}
-                                        className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                    >
-                                        Logout
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </nav>
+
+                <NavHeader />
 
                 <div className="py-12">
                     <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
@@ -185,7 +146,7 @@ export default function TransactionsCreate() {
                                                 </option>
                                                 {products.map((product: Product) => (
                                                     <option key={product.id} value={product.id}>
-                                                        {product.name} (Stock: {product.stock}) - {product.category?.name}
+                                                        {product.product_name} (Stock: {product.stock}) - {product.category_name}
                                                     </option>
                                                 ))}
                                             </select>
@@ -208,10 +169,10 @@ export default function TransactionsCreate() {
                                                         <span className="font-medium">Current Stock:</span> {selectedProduct.stock}
                                                     </div>
                                                     <div>
-                                                        <span className="font-medium">Price:</span> ${selectedProduct.price.toFixed(2)}
+                                                        <span className="font-medium">Stock:</span> {selectedProduct.stock}
                                                     </div>
                                                     <div>
-                                                        <span className="font-medium">Category:</span> {selectedProduct.category?.name || 'No Category'}
+                                                        <span className="font-medium">Category:</span> {selectedProduct.category_name || 'No Category'}
                                                     </div>
                                                 </div>
                                             </div>
@@ -229,8 +190,8 @@ export default function TransactionsCreate() {
                                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
                                                 required
                                             >
-                                                <option value="in">Stock In (Increase Stock)</option>
-                                                <option value="out">Stock Out (Decrease Stock)</option>
+                                                <option value="stock_in">Stock In (Increase Stock)</option>
+                                                <option value="stock_out">Stock Out (Decrease Stock)</option>
                                             </select>
                                             {errors.type && (
                                                 <div className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.type}</div>
@@ -256,69 +217,30 @@ export default function TransactionsCreate() {
                                             )}
 
                                             {/* Stock warning */}
-                                            {selectedProduct && formData.type === 'out' && formData.quantity > selectedProduct.stock && (
+                                            {selectedProduct && formData.type === 'stock_out' && formData.quantity > selectedProduct.stock && (
                                                 <div className="mt-1 text-sm text-yellow-600 dark:text-yellow-400">
                                                     ⚠️ Warning: Quantity exceeds current stock ({selectedProduct.stock})
                                                 </div>
                                             )}
                                         </div>
 
-                                        {/* Amount */}
-                                        <div>
-                                            <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Amount (Optional)
-                                            </label>
-                                            <input
-                                                type="number"
-                                                id="amount"
-                                                step="0.01"
-                                                min="0"
-                                                value={formData.amount || ''}
-                                                onChange={handleInputChange}
-                                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
-                                                placeholder="0.00"
-                                            />
-                                            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                Total monetary value of this transaction (optional)
-                                            </div>
-                                            {errors.amount && (
-                                                <div className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.amount}</div>
-                                            )}
-                                        </div>
 
-                                        {/* Transaction Date */}
-                                        <div>
-                                            <label htmlFor="transaction_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Transaction Date *
-                                            </label>
-                                            <input
-                                                type="date"
-                                                id="transaction_date"
-                                                value={formData.transaction_date}
-                                                onChange={handleInputChange}
-                                                className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
-                                                required
-                                            />
-                                            {errors.transaction_date && (
-                                                <div className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.transaction_date}</div>
-                                            )}
-                                        </div>
 
-                                        {/* Description */}
+                                        {/* notes */}
                                         <div className="md:col-span-2">
-                                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                Description (Optional)
+                                            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Notes (Optional)
                                             </label>
                                             <textarea
-                                                id="description"
+                                                id="notes"
                                                 rows={3}
-                                                value={formData.description}
+                                                value={formData.notes}
                                                 onChange={handleInputChange}
                                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
-                                                placeholder="Add any notes or description for this transaction..."
+                                                placeholder="Add any notes or notes for this transaction..."
                                             />
-                                            {errors.description && (
-                                                <div className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description}</div>
+                                            {errors.notes && (
+                                                <div className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.notes}</div>
                                             )}
                                         </div>
                                     </div>

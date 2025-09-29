@@ -5,6 +5,7 @@ import { useProducts } from '@/hooks/useApi';
 import ApiService from '@/services/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
+import NavHeader from '@/layouts/app/NavHeader';
 
 export default function ProductsIndex() {
     const { user, logout } = useAuth();
@@ -43,41 +44,7 @@ export default function ProductsIndex() {
 
             <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
                 {/* Navigation */}
-                <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between h-16">
-                            <div className="flex items-center space-x-8">
-                                <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
-                                    DeepTech
-                                </Link>
-                                <div className="flex space-x-4">
-                                    <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
-                                        Dashboard
-                                    </Link>
-                                    <Link href="/categories" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
-                                        Categories
-                                    </Link>
-                                    <Link href="/products" className="text-blue-600 font-medium">
-                                        Products
-                                    </Link>
-                                </div>
-                            </div>
-                            <div className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-4">
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                                        Welcome, {user?.name || `${user?.first_name} ${user?.last_name}`}
-                                    </span>
-                                    <button
-                                        onClick={logout}
-                                        className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                    >
-                                        Logout
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </nav>
+                <NavHeader />
 
                 <div className="py-12">
                     <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -136,9 +103,6 @@ export default function ProductsIndex() {
                                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                                     <tr>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                            ID
-                                                        </th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                             Image
                                                         </th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -164,7 +128,7 @@ export default function ProductsIndex() {
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 {product.image ? (
                                                                     <img
-                                                                        src={product.image}
+                                                                        src={product.image_url}
                                                                         alt={product.name}
                                                                         className="h-12 w-12 object-cover rounded-md"
                                                                     />
@@ -183,7 +147,7 @@ export default function ProductsIndex() {
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                                                {product.category?.name || 'No Category'}
+                                                                {product.category_name || 'No Category'}
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${product.stock > 0

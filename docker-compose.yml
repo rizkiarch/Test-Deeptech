@@ -132,8 +132,8 @@ services:
     networks:
       - microservices-network
     depends_on:
-      frontend-service:
-        condition: service_healthy
+      # frontend-service:
+      #   condition: service_healthy
       krakend:
         condition: service_healthy
       user-service:

@@ -4,15 +4,15 @@ import { User, Category, ProductFormData } from '@/types';
 import ApiService from '@/services/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
+import NavHeader from '@/layouts/app/NavHeader';
 
 export default function ProductCreate() {
     const { user, logout } = useAuth();
     const [formData, setFormData] = useState<ProductFormData>({
         name: '',
         description: '',
-        categoryId: 0,
+        category_id: 0,
         stock: 0,
-        price: 0,
     });
     const [categories, setCategories] = useState<Category[]>([]);
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -49,11 +49,8 @@ export default function ProductCreate() {
             const formDataToSend = new FormData();
             formDataToSend.append('name', formData.name);
             formDataToSend.append('description', formData.description);
-            formDataToSend.append('categoryId', formData.categoryId.toString());
+            formDataToSend.append('category_id', formData.category_id.toString());
             formDataToSend.append('stock', formData.stock.toString());
-            if (formData.price) {
-                formDataToSend.append('price', formData.price.toString());
-            }
             if (imageFile) {
                 formDataToSend.append('image', imageFile);
             }
@@ -65,9 +62,8 @@ export default function ProductCreate() {
             setFormData({
                 name: '',
                 description: '',
-                categoryId: 0,
+                category_id: 0,
                 stock: 0,
-                price: 0,
             });
             setImageFile(null);
             setImagePreview('');
@@ -129,41 +125,7 @@ export default function ProductCreate() {
 
             <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
                 {/* Navigation */}
-                <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between h-16">
-                            <div className="flex items-center space-x-8">
-                                <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
-                                    DeepTech
-                                </Link>
-                                <div className="flex space-x-4">
-                                    <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
-                                        Dashboard
-                                    </Link>
-                                    <Link href="/categories" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
-                                        Categories
-                                    </Link>
-                                    <Link href="/products" className="text-blue-600 font-medium">
-                                        Products
-                                    </Link>
-                                </div>
-                            </div>
-                            <div className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-4">
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                                        Welcome, {user?.name || `${user?.first_name} ${user?.last_name}`}
-                                    </span>
-                                    <button
-                                        onClick={logout}
-                                        className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                    >
-                                        Logout
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </nav>
+                <NavHeader />
 
                 <div className="py-12">
                     <div className="max-w-2xl mx-auto sm:px-6 lg:px-8">
@@ -243,19 +205,19 @@ export default function ProductCreate() {
 
                                     {/* Category Field */}
                                     <div>
-                                        <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Category *
                                         </label>
                                         {loadingCategories ? (
                                             <div className="animate-pulse h-10 bg-gray-200 dark:bg-gray-700 rounded-md"></div>
                                         ) : (
                                             <select
-                                                id="categoryId"
-                                                name="categoryId"
-                                                value={formData.categoryId}
+                                                id="category_id"
+                                                name="category_id"
+                                                value={formData.category_id}
                                                 onChange={handleChange}
                                                 required
-                                                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.categoryId ? 'border-red-500' : 'border-gray-300'
+                                                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.category_id ? 'border-red-500' : 'border-gray-300'
                                                     }`}
                                             >
                                                 <option value={0}>Select a category</option>
@@ -266,48 +228,7 @@ export default function ProductCreate() {
                                                 ))}
                                             </select>
                                         )}
-                                        {errors.categoryId && <p className="mt-1 text-sm text-red-600">{errors.categoryId}</p>}
-                                    </div>
-
-                                    {/* Stock and Price Fields */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label htmlFor="stock" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Stock *
-                                            </label>
-                                            <input
-                                                type="number"
-                                                id="stock"
-                                                name="stock"
-                                                value={formData.stock}
-                                                onChange={handleChange}
-                                                required
-                                                min="0"
-                                                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.stock ? 'border-red-500' : 'border-gray-300'
-                                                    }`}
-                                                placeholder="0"
-                                            />
-                                            {errors.stock && <p className="mt-1 text-sm text-red-600">{errors.stock}</p>}
-                                        </div>
-
-                                        <div>
-                                            <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Price (Optional)
-                                            </label>
-                                            <input
-                                                type="number"
-                                                id="price"
-                                                name="price"
-                                                value={formData.price || ''}
-                                                onChange={handleChange}
-                                                min="0"
-                                                step="0.01"
-                                                className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.price ? 'border-red-500' : 'border-gray-300'
-                                                    }`}
-                                                placeholder="0.00"
-                                            />
-                                            {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
-                                        </div>
+                                        {errors.category_id && <p className="mt-1 text-sm text-red-600">{errors.category_id}</p>}
                                     </div>
 
                                     {/* Image Field */}
