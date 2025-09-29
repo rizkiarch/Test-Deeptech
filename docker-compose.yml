@@ -1,0 +1,218 @@
+services:
+  # frontend-service:
+  #   build:
+  #     context: .docker/php
+  #     dockerfile: Dockerfile
+  #   container_name: frontend-service
+  #   ports:
+  #     - "6000:6001"
+  #   volumes:
+  #     - ./frontend:/var/www:cached
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:6001/"]
+  #     timeout: 5s
+  #     retries: 3
+  #     interval: 30s
+  #     start_period: 20s
+  mysql:
+    build:
+      context: .docker/database/mysql
+      dockerfile: Dockerfile
+    container_name: microservices-mysql
+    restart: unless-stopped
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-deeptech-db}
+      MYSQL_USER: ${MYSQL_USER:-deeptech_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-deeptech_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - .docker/logs:/var/log/mysql
+      - .docker/database/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+      - .docker/database/mysql/sql:/docker-entrypoint-initdb.d:ro
+    networks:
+      - microservices-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD:-root}",
+        ]
+      timeout: 20s
+      retries: 10
+      interval: 30s
+      start_period: 40s
+  redis:
+    build:
+      context: .docker/redis
+      dockerfile: Dockerfile
+    container_name: microservices-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+      - .docker/logs:/var/log/redis
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 3s
+      retries: 5
+      interval: 10s
+      start_period: 10s
+    sysctls:
+      - net.core.somaxconn=65535
+
+  krakend:
+    build:
+      context: .docker/krakenD
+      dockerfile: Dockerfile
+    container_name: microservices-krakend
+    restart: unless-stopped
+    ports:
+      - "8080:8080" # API Gateway port
+      - "8090:8090" # Metrics port
+    volumes:
+      - .docker/logs:/var/log/krakend
+      - .docker/krakenD/krakend.json:/etc/krakend/krakend.json:ro
+    networks:
+      - microservices-network
+    depends_on:
+      user-service:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/__health",
+        ]
+      timeout: 5s
+      retries: 3
+      interval: 30s
+      start_period: 10s
+
+  nginx:
+    build:
+      context: .docker/nginx
+      dockerfile: Dockerfile
+    container_name: microservices-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./backend:/var/www:cached
+      - .docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - .docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - .docker/logs:/var/log/nginx
+    networks:
+      - microservices-network
+    depends_on:
+      krakend:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      timeout: 3s
+      retries: 3
+      interval: 30s
+      start_period: 5s
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "5000:5001"
+    volumes:
+      - ./backend/user-service:/usr/src/app:cached
+      - /usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=5001
+      - DB_HOST=mysql
+      - DB_USER=${MYSQL_USER:-deeptech_user}
+      - DB_PASSWORD=${MYSQL_PASSWORD:-deeptech_password}
+      - DB_NAME=${MYSQL_DATABASE:-deeptech-db}
+      - DB_PORT=3306
+      - DATABASE_URL=mysql://${MYSQL_USER:-deeptech_user}:${MYSQL_PASSWORD:-deeptech_password}@mysql:3306/${MYSQL_DATABASE:-deeptech-db}
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-here}
+      - JWT_EXPIRES_IN=7d
+    networks:
+      - microservices-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      timeout: 5s
+      retries: 3
+      interval: 30s
+      start_period: 20s
+  data-service:
+    build:
+      context: ./backend/data-service
+      dockerfile: Dockerfile
+    container_name: data-service
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./backend/data-service:/usr/src/app:cached
+      - /usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=5002
+      - DB_HOST=mysql
+      - DB_USER=${MYSQL_USER:-deeptech_user}
+      - DB_PASSWORD=${MYSQL_PASSWORD:-deeptech_password}
+      - DB_NAME=${MYSQL_DATABASE:-deeptech-db}
+      - DB_PORT=3306
+      - DATABASE_URL=mysql://${MYSQL_USER:-deeptech_user}:${MYSQL_PASSWORD:-deeptech_password}@mysql:3306/${MYSQL_DATABASE:-deeptech-db}
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-here}
+      - JWT_EXPIRES_IN=7d
+      - UPLOAD_PATH=./uploads
+      - MAX_FILE_SIZE=5242880
+    networks:
+      - microservices-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      timeout: 5s
+      retries: 3
+      interval: 30s
+      start_period: 20s
+
+networks:
+  microservices-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
