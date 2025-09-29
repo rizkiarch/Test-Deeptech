@@ -1,0 +1,127 @@
+export interface User {
+    id: number;
+    name: string;
+    email: string;
+    email_verified_at?: string;
+}
+
+export type PageProps<
+    T extends Record<string, unknown> = Record<string, unknown>,
+> = T & {
+    auth: {
+        user: User;
+    };
+    ziggy?: {
+        url: string;
+        port: number | null;
+        defaults: Record<string, any>;
+        routes: Record<string, any>;
+    };
+};
+
+// New types for Categories and Products
+export interface Category {
+    id: number;
+    name: string;
+    description: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Product {
+    id: number;
+    name: string;
+    description: string;
+    image?: string;
+    category_id: number;
+    category?: Category;
+    stock: number;
+    price?: number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Transaction {
+    id: number;
+    product_id: number;
+    product?: Product;
+    quantity: number;
+    amount?: number;
+    type: 'in' | 'out';
+    description?: string;
+    transaction_date?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+// API Response types
+export interface ApiResponse<T> {
+    success: boolean;
+    message: string;
+    data: T;
+    meta?: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+    };
+}
+
+export interface PaginatedResponse<T> {
+    data: T[];
+    meta: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+    };
+}
+
+// Form types
+export interface CategoryFormData {
+    name: string;
+    description: string;
+}
+
+export interface ProductFormData {
+    name: string;
+    description: string;
+    categoryId: number;
+    stock: number;
+    price?: number;
+    image?: File;
+}
+
+export interface TransactionFormData {
+    product_id: number;
+    quantity: number;
+    type: 'in' | 'out';
+    amount?: number;
+    description?: string;
+    transaction_date?: string;
+}
+
+export interface Config {
+    [key: string]: any;
+}
+
+export interface Errors {
+    [key: string]: string;
+}
+
+export interface ErrorBag {
+    [key: string]: string[];
+}
+
+export interface InertiaSharedProps<T = {}> {
+    errors: Errors & ErrorBag;
+    auth: {
+        user: User | null;
+    };
+    flash?: {
+        message?: string;
+        error?: string;
+        success?: string;
+    };
+    [key: string]: any;
+}

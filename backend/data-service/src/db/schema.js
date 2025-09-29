@@ -19,20 +19,12 @@ export const productsTable = mysqlTable("products", {
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
 
-export const transactionBatchesTable = mysqlTable("transaction_batches", {
-    id: int("id").primaryKey().autoincrement(),
-    type: mysqlEnum("type", ["stock_in", "stock_out"]).notNull(),
-    notes: text("notes"),
-    totalItems: int("total_items").default(0),
-    createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
-});
-
 export const transactionsTable = mysqlTable("transactions", {
     id: int("id").primaryKey().autoincrement(),
-    batchId: int("batch_id").notNull(),
+    type: mysqlEnum("type", ["stock_in", "stock_out"]).notNull(),
     productId: int("product_id").notNull(),
     quantity: int("quantity").notNull(),
+    notes: text("notes"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
 });

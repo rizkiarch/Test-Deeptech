@@ -35,4 +35,22 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Microservices Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'api_gateway' => [
+        'url' => env('API_GATEWAY_URL', 'http://krakend:8080'),
+    ],
+
+    'user_service' => [
+        'url' => env('USER_SERVICE_URL', 'http://user-service:5001'),
+    ],
+
+    'data_service' => [
+        'url' => env('DATA_SERVICE_URL', 'http://data-service:5002'),
+    ],
+
 ];

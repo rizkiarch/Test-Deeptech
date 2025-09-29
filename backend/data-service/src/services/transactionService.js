@@ -27,10 +27,18 @@ class TransactionService {
         }
 
         const requiredFields = ['type', 'product_id', 'quantity'];
-        const missingFields = requiredFields.filter(field => !transactionData[field]);
+        const missingFields = requiredFields.filter(field => !transactionData[field] && transactionData[field] !== 0);
         if (missingFields.length > 0) {
             return {
                 message: `Missing required fields: ${missingFields.join(', ')}`,
+                statusCode: 400
+            };
+        }
+
+        // Validate quantity is a positive number
+        if (isNaN(transactionData.quantity) || transactionData.quantity <= 0) {
+            return {
+                message: 'Quantity must be a positive number',
                 statusCode: 400
             };
         }
@@ -61,10 +69,10 @@ class TransactionService {
         const newTransactionId = await TransactionModel.createTransaction(transactionData);
 
         const newStock = transactionData.type === 'stock_in'
-            ? product.stock + transactionData.quantity
-            : product.stock - transactionData.quantity;
+            ? product.stock + parseInt(transactionData.quantity)
+            : product.stock - parseInt(transactionData.quantity);
 
-        await ProductModel.updateProduct(transactionData.product_id, { stock: newStock });
+        await ProductModel.updateStock(transactionData.product_id, newStock);
 
         return { data: { id: newTransactionId }, message: 'Transaction created successfully', statusCode: 201 };
     }
@@ -85,14 +93,91 @@ class TransactionService {
             };
         }
 
+        let newProduct = null;
         if (transactionData.product_id) {
-            const product = await ProductModel.getProductById(transactionData.product_id);
-            if (!product) {
+            newProduct = await ProductModel.getProductById(transactionData.product_id);
+            if (!newProduct) {
                 return {
                     message: 'Product not found',
                     statusCode: 404
                 };
             }
+        }
+
+        // Validate quantity if provided
+        if (transactionData.quantity !== undefined) {
+            if (isNaN(transactionData.quantity) || transactionData.quantity <= 0) {
+                return {
+                    message: 'Quantity must be a positive number',
+                    statusCode: 400
+                };
+            }
+        }
+
+        // Get current product to calculate stock changes
+        const currentProduct = await ProductModel.getProductById(transaction.product_id);
+        if (!currentProduct) {
+            return {
+                message: 'Current product not found',
+                statusCode: 404
+            };
+        }
+
+        // Calculate stock adjustments
+        const oldType = transaction.type;
+        const oldQuantity = parseInt(transaction.quantity);
+        const oldProductId = transaction.product_id;
+
+        const newType = transactionData.type || oldType;
+        const newQuantity = transactionData.quantity ? parseInt(transactionData.quantity) : oldQuantity;
+        const newProductId = transactionData.product_id || oldProductId;
+
+        // Revert old transaction effect on old product
+        let oldProductNewStock = currentProduct.stock;
+        if (oldType === 'stock_in') {
+            oldProductNewStock -= oldQuantity; // Remove previous stock_in
+        } else {
+            oldProductNewStock += oldQuantity; // Restore previous stock_out
+        }
+
+        // Apply new transaction effect
+        if (newProductId === oldProductId) {
+            // Same product, apply new transaction
+            if (newType === 'stock_in') {
+                oldProductNewStock += newQuantity;
+            } else {
+                if (oldProductNewStock < newQuantity) {
+                    return {
+                        message: 'Insufficient stock after adjustment',
+                        statusCode: 400
+                    };
+                }
+                oldProductNewStock -= newQuantity;
+            }
+
+            // Update the product stock
+            await ProductModel.updateStock(oldProductId, oldProductNewStock);
+        } else {
+            // Different product
+            await ProductModel.updateStock(oldProductId, oldProductNewStock);
+
+            // Apply to new product
+            const targetProduct = newProduct || await ProductModel.getProductById(newProductId);
+            let targetProductStock = targetProduct.stock;
+
+            if (newType === 'stock_in') {
+                targetProductStock += newQuantity;
+            } else {
+                if (targetProductStock < newQuantity) {
+                    return {
+                        message: 'Insufficient stock in target product',
+                        statusCode: 400
+                    };
+                }
+                targetProductStock -= newQuantity;
+            }
+
+            await ProductModel.updateStock(newProductId, targetProductStock);
         }
 
         const updatedTransaction = await TransactionModel.updateTransaction(id, transactionData);
@@ -107,6 +192,36 @@ class TransactionService {
                 statusCode: 404
             };
         }
+
+        // Get product to revert stock changes
+        const product = await ProductModel.getProductById(transaction.product_id);
+        if (!product) {
+            return {
+                message: 'Product not found',
+                statusCode: 404
+            };
+        }
+
+        // Revert the transaction effect
+        let newStock = product.stock;
+        if (transaction.type === 'stock_in') {
+            // Remove the stock that was added
+            newStock -= parseInt(transaction.quantity);
+            if (newStock < 0) {
+                return {
+                    message: 'Cannot delete transaction: would result in negative stock',
+                    statusCode: 400
+                };
+            }
+        } else {
+            // Restore the stock that was removed
+            newStock += parseInt(transaction.quantity);
+        }
+
+        // Update product stock
+        await ProductModel.updateStock(transaction.product_id, newStock);
+
+        // Delete the transaction
         await TransactionModel.deleteTransaction(id);
         return { message: 'Transaction deleted successfully', statusCode: 200 };
     }
@@ -127,11 +242,20 @@ class TransactionService {
             const transactionData = transactionsData[i];
 
             const requiredFields = ['type', 'product_id', 'quantity'];
-            const missingFields = requiredFields.filter(field => !transactionData[field]);
+            const missingFields = requiredFields.filter(field => !transactionData[field] && transactionData[field] !== 0);
             if (missingFields.length > 0) {
                 errors.push({
                     index: i,
                     message: `Missing required fields: ${missingFields.join(', ')}`
+                });
+                continue;
+            }
+
+            // Validate quantity is a positive number
+            if (isNaN(transactionData.quantity) || transactionData.quantity <= 0) {
+                errors.push({
+                    index: i,
+                    message: 'Quantity must be a positive number'
                 });
                 continue;
             }
@@ -165,8 +289,8 @@ class TransactionService {
             }
 
             const newStock = transactionData.type === 'stock_in'
-                ? currentStock + transactionData.quantity
-                : currentStock - transactionData.quantity;
+                ? currentStock + parseInt(transactionData.quantity)
+                : currentStock - parseInt(transactionData.quantity);
 
             productStockUpdates.set(transactionData.product_id, newStock);
 
@@ -188,11 +312,7 @@ class TransactionService {
             const bulkResult = await TransactionModel.createBulkTransactions(validTransactions);
 
             for (const [productId, newStock] of productStockUpdates) {
-                const product = await ProductModel.getProductById(productId);
-                await ProductModel.updateProduct(productId, {
-                    ...product,
-                    stock: newStock
-                });
+                await ProductModel.updateStock(productId, newStock);
             }
 
             return {

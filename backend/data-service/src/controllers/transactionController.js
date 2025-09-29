@@ -77,8 +77,8 @@ class TransactionController {
     static async updateBulkTransactions(req, res) {
         try {
             const result = await TransactionService.updateBulkTransactions(req.body);
-            if (result.statusCode === 400) {
-                return res.status(400).json(Response.error(result.message, result.errors));
+            if (result.statusCode >= 400) {
+                return res.status(result.statusCode).json(Response.error(result.message, result.errors || result.data));
             }
             res.status(result.statusCode).json(Response.success(result.data, result.message));
         } catch (error) {
