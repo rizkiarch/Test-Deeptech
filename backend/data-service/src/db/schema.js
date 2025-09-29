@@ -1,47 +1,38 @@
-import {
-    mysqlTable,
-    int,
-    varchar,
-    text,
-    decimal,
-    timestamp,
-    mysqlEnum
-} from 'drizzle-orm/mysql-core';
-import { sql } from 'drizzle-orm';
+import { mysqlTable, int, varchar, text, timestamp, mysqlEnum, decimal } from "drizzle-orm/mysql-core";
 
-export const categoriesTable = mysqlTable('categories', {
-    id: int('id').primaryKey().autoincrement(),
-    name: varchar('name', { length: 255 }).notNull().unique(),
-    description: text('description'),
-    createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`)
+export const categoriesTable = mysqlTable("categories", {
+    id: int("id").primaryKey().autoincrement(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
 
-export const productsTable = mysqlTable('products', {
-    id: int('id').primaryKey().autoincrement(),
-    name: varchar('name', { length: 255 }).notNull(),
-    description: text('description'),
-    image: varchar('image', { length: 500 }),
-    categoryId: int('category_id').notNull().references(() => categoriesTable.id, {
-        onDelete: 'cascade',
-        onUpdate: 'cascade'
-    }),
-    stock: int('stock').notNull().default(0),
-    price: decimal('price', { precision: 10, scale: 2 }).default('0.00'),
-    createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`)
+export const productsTable = mysqlTable("products", {
+    id: int("id").primaryKey().autoincrement(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    image: varchar("image", { length: 500 }),
+    categoryId: int("category_id").notNull(),
+    stock: int("stock").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
 
-export const transactionsTable = mysqlTable('transactions', {
-    id: int('id').primaryKey().autoincrement(),
-    productId: int('product_id').notNull().references(() => productsTable.id, {
-        onDelete: 'cascade',
-        onUpdate: 'cascade'
-    }),
-    type: mysqlEnum('type', ['in', 'out']).notNull(),
-    quantity: int('quantity').notNull(),
-    notes: text('notes'),
-    batchId: varchar('batch_id', { length: 100 }),
-    createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`)
+export const transactionBatchesTable = mysqlTable("transaction_batches", {
+    id: int("id").primaryKey().autoincrement(),
+    type: mysqlEnum("type", ["stock_in", "stock_out"]).notNull(),
+    notes: text("notes"),
+    totalItems: int("total_items").default(0),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const transactionsTable = mysqlTable("transactions", {
+    id: int("id").primaryKey().autoincrement(),
+    batchId: int("batch_id").notNull(),
+    productId: int("product_id").notNull(),
+    quantity: int("quantity").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
 });

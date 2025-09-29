@@ -154,12 +154,12 @@
     {
       "endpoint": "/api/v1/categories/{id}",
       "method": "GET",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "input_headers": ["Authorization"],
       "backend": [
         {
           "url_pattern": "/api/categories/{id}",
-          "encoding": "json",
+          "encoding": "no-op",
           "sd": "static",
           "method": "GET",
           "host": ["http://data-service:5002"],
@@ -170,13 +170,13 @@
     {
       "endpoint": "/api/v1/categories",
       "method": "POST",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "input_headers": ["Authorization", "Content-Type"],
       "input_query_strings": ["*"],
       "backend": [
         {
           "url_pattern": "/api/categories",
-          "encoding": "json",
+          "encoding": "no-op",
           "sd": "static",
           "method": "POST",
           "host": ["http://data-service:5002"],
@@ -236,12 +236,12 @@
     {
       "endpoint": "/api/v1/products/{id}",
       "method": "GET",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "input_headers": ["Authorization"],
       "backend": [
         {
           "url_pattern": "/api/products/{id}",
-          "encoding": "json",
+          "encoding": "no-op",
           "sd": "static",
           "method": "GET",
           "host": ["http://data-service:5002"],
@@ -252,13 +252,13 @@
     {
       "endpoint": "/api/v1/products",
       "method": "POST",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "input_headers": ["Authorization", "Content-Type"],
       "input_query_strings": ["*"],
       "backend": [
         {
           "url_pattern": "/api/products",
-          "encoding": "json",
+          "encoding": "no-op",
           "sd": "static",
           "method": "POST",
           "host": ["http://data-service:5002"],
@@ -334,12 +334,12 @@
     {
       "endpoint": "/api/v1/transactions/{id}",
       "method": "GET",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "input_headers": ["Authorization"],
       "backend": [
         {
           "url_pattern": "/api/transactions/{id}",
-          "encoding": "json",
+          "encoding": "no-op",
           "sd": "static",
           "method": "GET",
           "host": ["http://data-service:5002"],
@@ -350,13 +350,13 @@
     {
       "endpoint": "/api/v1/transactions/single",
       "method": "POST",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "input_headers": ["Authorization", "Content-Type"],
       "input_query_strings": ["*"],
       "backend": [
         {
           "url_pattern": "/api/transactions/single",
-          "encoding": "json",
+          "encoding": "no-op",
           "sd": "static",
           "method": "POST",
           "host": ["http://data-service:5002"],
@@ -367,13 +367,13 @@
     {
       "endpoint": "/api/v1/transactions/bulk",
       "method": "POST",
-      "output_encoding": "json",
+      "output_encoding": "no-op",
       "input_headers": ["Authorization", "Content-Type"],
       "input_query_strings": ["*"],
       "backend": [
         {
           "url_pattern": "/api/transactions/bulk",
-          "encoding": "json",
+          "encoding": "no-op",
           "sd": "static",
           "method": "POST",
           "host": ["http://data-service:5002"],
@@ -421,7 +421,7 @@
       "input_query_strings": ["startDate", "endDate"],
       "backend": [
         {
-          "url_pattern": "/api/transactions/date-range?startDate={startDate}&endDate={endDate}",
+          "url_pattern": "/api/transactions/date-range",
           "encoding": "json",
           "sd": "static",
           "method": "GET",
@@ -457,7 +457,7 @@
       "debug": false
     },
     "telemetry/logging": {
-      "level": "INFO",
+      "level": "DEBUG",
       "prefix": "[KRAKEND]",
       "syslog": false,
       "stdout": true
@@ -469,6 +469,12 @@
       "backend_disabled": false,
       "endpoint_disabled": false,
       "listen_address": ":8090"
+    },
+    "plugin/http-server": {
+      "name": ["error-handler"],
+      "error-handler": {
+        "return_error_details": true
+      }
     }
   }
 }

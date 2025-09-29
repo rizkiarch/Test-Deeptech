@@ -1,15 +1,14 @@
 import express from 'express';
-import ProductController from '../controllers/productController.js';
-import upload from '../middlewares/upload.js';
+import productController from '../controllers/productController.js';
+import { uploadSingle, handleUploadError } from '../middlewares/upload.js';
 
 const router = express.Router();
 
-router.get('/', ProductController.getAllProducts);
-router.get('/:id', ProductController.getProductById);
-router.post('/', upload.single('image'), ProductController.createProduct);
-router.put('/:id', upload.single('image'), ProductController.updateProduct);
-router.delete('/:id', ProductController.deleteProduct);
-router.get('/category/:categoryId', ProductController.getProductsByCategory);
-router.patch('/:id/stock', ProductController.updateProductStock);
+router.get('/', productController.getAllProducts.bind(productController));
+router.get('/:id', productController.getProductById.bind(productController));
+router.post('/', uploadSingle, handleUploadError, productController.createProduct.bind(productController));
+router.put('/:id', uploadSingle, handleUploadError, productController.updateProduct.bind(productController));
+router.delete('/:id', productController.deleteProduct.bind(productController));
+router.get('/category/:categoryId', productController.getProductsByCategory.bind(productController));
 
 export default router;

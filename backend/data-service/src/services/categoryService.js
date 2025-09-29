@@ -2,82 +2,62 @@ import CategoryModel from "../models/categoryModel.js";
 
 class CategoryService {
     static async getAllCategories() {
-        const categories = await CategoryModel.getAllCategories();
-        return { data: categories, message: 'Categories retrieved successfully', statusCode: 200 };
+        const Category = await CategoryModel.getAllCategories();
+        return { data: Category, message: 'Categories retrieved successfully', statusCode: 200 };
     }
 
     static async getCategoryById(id) {
-        if (!id) {
-            return { message: 'Category ID is required', statusCode: 400 };
+        const Category = await CategoryModel.getCategoryById(id);
+        if (!Category) {
+            return {
+                message: 'Category not found',
+                statusCode: 404
+            };
         }
-
-        const category = await CategoryModel.getCategoryById(id);
-        if (!category) {
-            return { message: 'Category not found', statusCode: 404 };
-        }
-        return { data: category, message: 'Category retrieved successfully', statusCode: 200 };
+        return { data: Category, message: 'Category retrieved successfully', statusCode: 200 };
     }
 
     static async createCategory(categoryData) {
-        const { name } = categoryData;
-
-        if (!name) {
-            return { message: 'Category name is required', statusCode: 400 };
+        if (!categoryData) {
+            return {
+                message: 'Category data is required',
+                statusCode: 400
+            };
         }
 
-        const categoryId = await CategoryModel.createCategory(categoryData);
-        const newCategory = await CategoryModel.getCategoryById(categoryId);
-        
-        return { 
-            data: newCategory, 
-            message: 'Category created successfully', 
-            statusCode: 201 
-        };
+        const requiredFields = ['name'];
+        const missingFields = requiredFields.filter(field => !categoryData[field]);
+        if (missingFields.length > 0) {
+            return {
+                message: `Missing required fields: ${missingFields.join(', ')}`,
+                statusCode: 400
+            };
+        }
+        const newCategory = await CategoryModel.createCategory(categoryData);
+        return { data: newCategory, message: 'Category created successfully', statusCode: 201 };
     }
 
     static async updateCategory(id, categoryData) {
-        if (!id) {
-            return { message: 'Category ID is required', statusCode: 400 };
+        const Category = await CategoryModel.getCategoryById(id);
+        if (!Category) {
+            return {
+                message: 'Category not found',
+                statusCode: 404
+            };
         }
-
-        const existingCategory = await CategoryModel.getCategoryById(id);
-        if (!existingCategory) {
-            return { message: 'Category not found', statusCode: 404 };
-        }
-
-        const { name } = categoryData;
-        if (!name) {
-            return { message: 'Category name is required', statusCode: 400 };
-        }
-
-        const updated = await CategoryModel.updateCategory(id, categoryData);
-        if (!updated) {
-            return { message: 'Failed to update category', statusCode: 500 };
-        }
-
-        const updatedCategory = await CategoryModel.getCategoryById(id);
-        return { 
-            data: updatedCategory, 
-            message: 'Category updated successfully', 
-            statusCode: 200 
-        };
+        const updatedCategory = await CategoryModel.updateCategory(id, categoryData);
+        return { data: updatedCategory, message: 'Category updated successfully', statusCode: 200 };
     }
 
     static async deleteCategory(id) {
-        if (!id) {
-            return { message: 'Category ID is required', statusCode: 400 };
+        const Category = await CategoryModel.getCategoryById(id);
+        if (!Category) {
+            return {
+                message: 'Category not found',
+                statusCode: 404
+            };
         }
-
-        const existingCategory = await CategoryModel.getCategoryById(id);
-        if (!existingCategory) {
-            return { message: 'Category not found', statusCode: 404 };
-        }
-
-        const deleted = await CategoryModel.deleteCategory(id);
-        if (!deleted) {
-            return { message: 'Failed to delete category', statusCode: 500 };
-        }
-
+        await CategoryModel.deleteCategory(id);
         return { message: 'Category deleted successfully', statusCode: 200 };
     }
 }

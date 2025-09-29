@@ -21,7 +21,7 @@ services:
   #     start_period: 20s
   mysql:
     build:
-      context: .docker/database/mysql
+      context: .docker/database
       dockerfile: Dockerfile
     container_name: microservices-mysql
     restart: unless-stopped
@@ -35,8 +35,8 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - .docker/logs:/var/log/mysql
-      - .docker/database/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
-      - .docker/database/mysql/sql:/docker-entrypoint-initdb.d:ro
+      - .docker/database/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+      - .docker/database/sql:/docker-entrypoint-initdb.d:ro
     networks:
       - microservices-network
     healthcheck:
@@ -94,6 +94,8 @@ services:
     depends_on:
       user-service:
         condition: service_healthy
+      data-service:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -129,6 +131,8 @@ services:
       krakend:
         condition: service_healthy
       user-service:
+        condition: service_healthy
+      data-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]

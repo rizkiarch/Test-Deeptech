@@ -1,5 +1,6 @@
 import CategoryService from "../services/categoryService.js";
 import Controller from "./controller.js";
+import response from "../utils/response.js";
 
 class CategoryController extends Controller {
     async getAllCategories(req, res) {
@@ -7,7 +8,12 @@ class CategoryController extends Controller {
     }
 
     async getCategoryById(req, res) {
-        return this.handleRequest(req, res, CategoryService.getCategoryById, req.params.id);
+        try {
+            const category = await CategoryService.getCategoryById(req.params.id);
+            return response.success(res, category);
+        } catch (error) {
+            return response.error(res, error.message);
+        }
     }
 
     async createCategory(req, res) {

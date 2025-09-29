@@ -5,13 +5,11 @@ const router = express.Router();
 
 router.get('/', TransactionController.getAllTransactions);
 router.get('/:id', TransactionController.getTransactionById);
-router.post('/single', TransactionController.createSingleTransaction);
+router.post('/', TransactionController.createTransaction);
 router.post('/bulk', TransactionController.createBulkTransactions);
-router.get('/product/:productId', TransactionController.getTransactionsByProduct);
-router.get('/type/:type', TransactionController.getTransactionsByType);
-router.get('/date-range', TransactionController.getTransactionsByDateRange);
-router.get('/batch/:batchId', TransactionController.getTransactionsByBatch);
-router.get('/stock-summary/:productId', TransactionController.getStockSummary);
+router.put('/:id', TransactionController.updateTransaction);
+router.put('/bulk', TransactionController.updateBulkTransactions);
 router.delete('/:id', TransactionController.deleteTransaction);
+router.get('/product/:productId', TransactionController.getTransactionsByProductId);
 
 export default router;

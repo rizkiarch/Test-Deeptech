@@ -1,264 +1,149 @@
-import ProductModel from '../models/productModel.js';
-import CategoryModel from '../models/categoryModel.js';
-import fs from 'fs';
-import path from 'path';
+import ProductModel from "../models/productModel.js";
+import CategoryModel from "../models/categoryModel.js";
+import { getFileUrl, deleteFile } from "../middlewares/upload.js";
 
 class ProductService {
-    static async getAllProducts(queryParams) {
-        try {
-            const {
-                page = 1,
-                limit = 10,
-                sortBy = 'id',
-                sortOrder = 'desc',
-                search = '',
-                categoryId = null
-            } = queryParams;
+    static async getAllProducts(req) {
+        const products = await ProductModel.getAllProducts();
 
-            const validatedPage = Math.max(1, parseInt(page));
-            const validatedLimit = Math.min(100, Math.max(1, parseInt(limit)));
+        const productsWithUrls = products.map(product => ({
+            ...product,
+            image_url: product.image ? getFileUrl(req, product.image) : null
+        }));
 
-            const validSortFields = ['id', 'name', 'stock', 'price', 'createdAt', 'updatedAt'];
-            const validatedSortBy = validSortFields.includes(sortBy) ? sortBy : 'id';
-            const validatedSortOrder = ['asc', 'desc'].includes(sortOrder) ? sortOrder : 'desc';
-
-            if (categoryId) {
-                const categoryExists = await CategoryModel.exists(parseInt(categoryId));
-                if (!categoryExists) {
-                    throw new Error('Category not found');
-                }
-            }
-
-            const params = {
-                page: validatedPage,
-                limit: validatedLimit,
-                sortBy: validatedSortBy,
-                sortOrder: validatedSortOrder,
-                search: search.trim(),
-                categoryId: categoryId ? parseInt(categoryId) : null
-            };
-
-            return await ProductModel.findAll(params);
-        } catch (error) {
-            throw new Error(`Service error: ${error.message}`);
-        }
+        return { data: productsWithUrls, message: 'Products retrieved successfully', statusCode: 200 };
     }
 
-    static async getProductById(id) {
-        try {
-            const productId = parseInt(id);
-            if (!productId || productId <= 0) {
-                throw new Error('Invalid product ID');
-            }
-
-            const product = await ProductModel.findById(productId);
-            if (!product) {
-                throw new Error('Product not found');
-            }
-
-            return product;
-        } catch (error) {
-            throw new Error(`Service error: ${error.message}`);
+    static async getProductById(id, req) {
+        if (!id) {
+            return { message: 'Product ID is required', statusCode: 400 };
         }
+
+        const product = await ProductModel.getProductById(id);
+        if (!product) {
+            return { message: 'Product not found', statusCode: 404 };
+        }
+
+        product.image_url = product.image ? getFileUrl(req, product.image) : null;
+
+        return { data: product, message: 'Product retrieved successfully', statusCode: 200 };
     }
 
-    static async createProduct(productData, imageFile = null) {
-        try {
-            const { name, categoryId } = productData;
+    static async createProduct(productData, req) {
+        const { name, description, image, categoryId, stock } = productData;
 
-            if (!name || !name.trim()) {
-                throw new Error('Product name is required');
-            }
-
-            if (!categoryId) {
-                throw new Error('Category ID is required');
-            }
-
-            const categoryExists = await CategoryModel.exists(parseInt(categoryId));
-            if (!categoryExists) {
-                throw new Error('Category not found');
-            }
-
-            const newProductData = {
-                name: name.trim(),
-                description: productData.description?.trim() || null,
-                categoryId: parseInt(categoryId),
-                stock: parseInt(productData.stock) || 0,
-                price: parseFloat(productData.price) || 0.00,
-                image: imageFile ? imageFile.filename : null
-            };
-
-            if (newProductData.price < 0) {
-                throw new Error('Price must be non-negative');
-            }
-
-            if (newProductData.stock < 0) {
-                throw new Error('Stock must be non-negative');
-            }
-
-            return await ProductModel.create(newProductData);
-        } catch (error) {
-            if (imageFile && imageFile.path) {
-                try {
-                    fs.unlinkSync(imageFile.path);
-                } catch (unlinkError) {
-                    console.error('Error removing uploaded file:', unlinkError.message);
-                }
-            }
-            throw new Error(`Service error: ${error.message}`);
+        if (!name || !categoryId) {
+            return { message: 'Name and category ID are required', statusCode: 400 };
         }
+
+        const category = await CategoryModel.getCategoryById(categoryId);
+        if (!category) {
+            return { message: 'Category not found', statusCode: 404 };
+        }
+
+        if (stock && (isNaN(stock) || stock < 0)) {
+            return { message: 'Stock must be a non-negative number', statusCode: 400 };
+        }
+
+        const productId = await ProductModel.createProduct(productData);
+        const newProduct = await ProductModel.getProductById(productId);
+
+        newProduct.image_url = newProduct.image ? getFileUrl(req, newProduct.image) : null;
+
+        return {
+            data: newProduct,
+            message: 'Product created successfully',
+            statusCode: 201
+        };
     }
 
-    static async updateProduct(id, productData, imageFile = null) {
-        try {
-            const productId = parseInt(id);
-            if (!productId || productId <= 0) {
-                throw new Error('Invalid product ID');
-            }
-
-            const existingProduct = await ProductModel.findById(productId);
-            if (!existingProduct) {
-                throw new Error('Product not found');
-            }
-
-            const updateData = {};
-
-            if (productData.name !== undefined) {
-                const trimmedName = productData.name.trim();
-                if (!trimmedName) {
-                    throw new Error('Product name cannot be empty');
-                }
-                updateData.name = trimmedName;
-            }
-
-            if (productData.description !== undefined) {
-                updateData.description = productData.description?.trim() || null;
-            }
-
-            if (productData.categoryId !== undefined) {
-                const categoryId = parseInt(productData.categoryId);
-                const categoryExists = await CategoryModel.exists(categoryId);
-                if (!categoryExists) {
-                    throw new Error('Category not found');
-                }
-                updateData.categoryId = categoryId;
-            }
-
-            if (productData.stock !== undefined) {
-                const stock = parseInt(productData.stock);
-                if (stock < 0) {
-                    throw new Error('Stock must be non-negative');
-                }
-                updateData.stock = stock;
-            }
-
-            if (productData.price !== undefined) {
-                const price = parseFloat(productData.price);
-                if (price < 0) {
-                    throw new Error('Price must be non-negative');
-                }
-                updateData.price = price;
-            }
-
-            if (imageFile) {
-                if (existingProduct.image) {
-                    const oldImagePath = path.join(process.cwd(), 'uploads', existingProduct.image);
-                    try {
-                        if (fs.existsSync(oldImagePath)) {
-                            fs.unlinkSync(oldImagePath);
-                        }
-                    } catch (error) {
-                        console.error('Error removing old image:', error.message);
-                    }
-                }
-                updateData.image = imageFile.filename;
-            }
-
-            if (Object.keys(updateData).length === 0) {
-                throw new Error('No valid fields provided for update');
-            }
-
-            return await ProductModel.update(productId, updateData);
-        } catch (error) {
-            if (imageFile && imageFile.path) {
-                try {
-                    fs.unlinkSync(imageFile.path);
-                } catch (unlinkError) {
-                    console.error('Error removing uploaded file:', unlinkError.message);
-                }
-            }
-            throw new Error(`Service error: ${error.message}`);
+    static async updateProduct(id, productData, req) {
+        if (!id) {
+            return { message: 'Product ID is required', statusCode: 400 };
         }
+
+        const existingProduct = await ProductModel.getProductById(id);
+        if (!existingProduct) {
+            return { message: 'Product not found', statusCode: 404 };
+        }
+
+        const { name, description, image, categoryId, stock } = productData;
+
+        if (categoryId) {
+            const category = await CategoryModel.getCategoryById(categoryId);
+            if (!category) {
+                return { message: 'Category not found', statusCode: 404 };
+            }
+        }
+
+        if (stock !== undefined && (isNaN(stock) || stock < 0)) {
+            return { message: 'Stock must be a non-negative number', statusCode: 400 };
+        }
+
+        if (image && existingProduct.image && existingProduct.image !== image) {
+            deleteFile(existingProduct.image);
+        }
+
+        const updated = await ProductModel.updateProduct(id, productData);
+        if (!updated) {
+            return { message: 'Failed to update product', statusCode: 500 };
+        }
+
+        const updatedProduct = await ProductModel.getProductById(id);
+
+        updatedProduct.image_url = updatedProduct.image ? getFileUrl(req, updatedProduct.image) : null;
+
+        return {
+            data: updatedProduct,
+            message: 'Product updated successfully',
+            statusCode: 200
+        };
     }
 
     static async deleteProduct(id) {
-        try {
-            const productId = parseInt(id);
-            if (!productId || productId <= 0) {
-                throw new Error('Invalid product ID');
-            }
-
-            const product = await ProductModel.findById(productId);
-            if (!product) {
-                throw new Error('Product not found');
-            }
-
-            if (product.image) {
-                const imagePath = path.join(process.cwd(), 'uploads', product.image);
-                try {
-                    if (fs.existsSync(imagePath)) {
-                        fs.unlinkSync(imagePath);
-                    }
-                } catch (error) {
-                    console.error('Error removing product image:', error.message);
-                }
-            }
-
-            return await ProductModel.delete(productId);
-        } catch (error) {
-            throw new Error(`Service error: ${error.message}`);
+        if (!id) {
+            return { message: 'Product ID is required', statusCode: 400 };
         }
+
+        const existingProduct = await ProductModel.getProductById(id);
+        if (!existingProduct) {
+            return { message: 'Product not found', statusCode: 404 };
+        }
+
+        if (existingProduct.image) {
+            deleteFile(existingProduct.image);
+        }
+
+        const deleted = await ProductModel.deleteProduct(id);
+        if (!deleted) {
+            return { message: 'Failed to delete product', statusCode: 500 };
+        }
+
+        return { message: 'Product deleted successfully', statusCode: 200 };
     }
 
-    static async getProductsByCategory(categoryId, queryParams = {}) {
-        try {
-            const validatedCategoryId = parseInt(categoryId);
-            if (!validatedCategoryId || validatedCategoryId <= 0) {
-                throw new Error('Invalid category ID');
-            }
-
-            const categoryExists = await CategoryModel.exists(validatedCategoryId);
-            if (!categoryExists) {
-                throw new Error('Category not found');
-            }
-
-            return await ProductModel.findByCategory(validatedCategoryId, queryParams);
-        } catch (error) {
-            throw new Error(`Service error: ${error.message}`);
+    static async getProductsByCategory(categoryId, req) {
+        if (!categoryId) {
+            return { message: 'Category ID is required', statusCode: 400 };
         }
-    }
 
-    static async updateProductStock(id, quantity, type = 'set') {
-        try {
-            const productId = parseInt(id);
-            const stockQuantity = parseInt(quantity);
-
-            if (!productId || productId <= 0) {
-                throw new Error('Invalid product ID');
-            }
-
-            if (isNaN(stockQuantity) || stockQuantity < 0) {
-                throw new Error('Invalid quantity');
-            }
-
-            if (!['set', 'add', 'subtract'].includes(type)) {
-                throw new Error('Invalid stock update type');
-            }
-
-            return await ProductModel.updateStock(productId, stockQuantity, type);
-        } catch (error) {
-            throw new Error(`Service error: ${error.message}`);
+        const category = await CategoryModel.getCategoryById(categoryId);
+        if (!category) {
+            return { message: 'Category not found', statusCode: 404 };
         }
+
+        const products = await ProductModel.getProductsByCategory(categoryId);
+
+        const productsWithUrls = products.map(product => ({
+            ...product,
+            image_url: product.image ? getFileUrl(req, product.image) : null
+        }));
+
+        return {
+            data: productsWithUrls,
+            message: 'Products retrieved successfully',
+            statusCode: 200
+        };
     }
 }
 
