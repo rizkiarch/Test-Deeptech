@@ -129,7 +129,7 @@ export default function Dashboard() {
                                 {/* Quick Actions Section */}
                                 <div className="mt-8">
                                     <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                                         <a
                                             href="/categories"
                                             className="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors text-center font-medium"
@@ -152,6 +152,13 @@ export default function Dashboard() {
                                         </a>
 
                                         <a
+                                            href="/users"
+                                            className="bg-indigo-600 text-white px-4 py-3 rounded-lg hover:bg-indigo-700 transition-colors text-center font-medium"
+                                        >
+                                            Manage Users
+                                        </a>
+
+                                        <a
                                             href="/categories/create"
                                             className="bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition-colors text-center font-medium"
                                         >
@@ -171,6 +178,13 @@ export default function Dashboard() {
                                         >
                                             Add Transaction
                                         </a>
+
+                                        <a
+                                            href="/users/create"
+                                            className="bg-cyan-600 text-white px-4 py-3 rounded-lg hover:bg-cyan-700 transition-colors text-center font-medium"
+                                        >
+                                            Add User
+                                        </a>
                                     </div>
                                 </div>
 
@@ -182,7 +196,6 @@ export default function Dashboard() {
                                             onClick={async () => {
                                                 try {
                                                     const response = await ApiService.get('/v1/users');
-                                                    console.log('Users API Response:', response.data);
                                                     alert('Check console for Users API response');
                                                 } catch (error) {
                                                     console.error('Users API Error:', error);
@@ -198,7 +211,6 @@ export default function Dashboard() {
                                             onClick={async () => {
                                                 try {
                                                     const response = await ApiService.get('/v1/categories');
-                                                    console.log('Categories API Response:', response.data);
                                                     alert('Check console for Categories API response');
                                                 } catch (error) {
                                                     console.error('Categories API Error:', error);
@@ -214,7 +226,6 @@ export default function Dashboard() {
                                             onClick={async () => {
                                                 try {
                                                     const response = await ApiService.get('/v1/products');
-                                                    console.log('Products API Response:', response.data);
                                                     alert('Check console for Products API response');
                                                 } catch (error) {
                                                     console.error('Products API Error:', error);

@@ -74,8 +74,25 @@ class ProductService {
             return { message: 'Product not found', statusCode: 404 };
         }
 
-        const { name, description, image, categoryId, category_id, stock } = productData;
+        const { name, description, image, existing_image, remove_image, categoryId, category_id, stock } = productData;
         const finalCategoryId = categoryId || category_id;
+
+        let finalImage;
+        if (image) {
+            finalImage = image;
+            if (existingProduct.image && existingProduct.image !== image) {
+                deleteFile(existingProduct.image);
+            }
+        } else if (existing_image) {
+            finalImage = existing_image;
+        } else if (remove_image === 'true') {
+            finalImage = null;
+            if (existingProduct.image) {
+                deleteFile(existingProduct.image);
+            }
+        } else {
+            finalImage = existingProduct.image;
+        }
 
         if (finalCategoryId) {
             const category = await CategoryModel.getCategoryById(finalCategoryId);
@@ -88,14 +105,15 @@ class ProductService {
             return { message: 'Stock must be a non-negative number', statusCode: 400 };
         }
 
-        if (image && existingProduct.image && existingProduct.image !== image) {
-            deleteFile(existingProduct.image);
-        }
+        const cleanProductData = {
+            name: name || existingProduct.name,
+            description: description || existingProduct.description,
+            categoryId: finalCategoryId || existingProduct.category_id,
+            stock: stock !== undefined ? stock : existingProduct.stock,
+            image: finalImage
+        };
 
-        const updated = await ProductModel.updateProduct(id, {
-            ...productData,
-            categoryId: finalCategoryId
-        });
+        const updated = await ProductModel.updateProduct(id, cleanProductData);
         if (!updated) {
             return { message: 'Failed to update product', statusCode: 500 };
         }

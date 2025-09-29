@@ -166,12 +166,6 @@ export default function TransactionsIndex() {
                                                                     >
                                                                         View
                                                                     </Link>
-                                                                    <Link
-                                                                        href={`/transactions/${transaction.id}/edit`}
-                                                                        className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
-                                                                    >
-                                                                        Edit
-                                                                    </Link>
                                                                     <button
                                                                         onClick={() => handleDelete(transaction.id)}
                                                                         disabled={deleteLoading === transaction.id}

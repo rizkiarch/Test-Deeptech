@@ -47,7 +47,7 @@ class AdminSeeder {
 
     static async rollback() {
         try {
-            console.log('🔄 Rolling back Drizzle admin seeder...');
+            console.log('🔄 Rolling back admin seeder...');
 
             const result = await db
                 .delete(usersTable)

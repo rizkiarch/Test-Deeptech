@@ -15,7 +15,7 @@
 - **Body**:
 ```json
 {
-  "type": "stock_in", // or "stock_out"
+  "type": "stock_in", 
   "product_id": 1,
   "quantity": 10,
   "notes": "Initial stock"

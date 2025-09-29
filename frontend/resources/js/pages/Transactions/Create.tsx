@@ -13,7 +13,6 @@ export default function TransactionsCreate() {
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Fetch products for dropdown
     const { data: productsData, loading: productsLoading } = useProducts(1, 100);
     const products = productsData?.data || [];
 
@@ -43,7 +42,6 @@ export default function TransactionsCreate() {
             await ApiService.createTransaction(formData);
             setSuccessMessage('Transaction created successfully!');
 
-            // Reset form after successful creation
             setTimeout(() => {
                 setFormData({
                     product_id: 0,
@@ -70,7 +68,6 @@ export default function TransactionsCreate() {
         setErrorMessage('');
     };
 
-    // Get selected product details
     const selectedProduct = products.find((p: Product) => p.id === formData.product_id);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -80,7 +77,6 @@ export default function TransactionsCreate() {
             [name]: name === 'product_id' || name === 'quantity' ? parseInt(value) || 0 : value
         }));
 
-        // Clear error for this field
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }

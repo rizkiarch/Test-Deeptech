@@ -12,7 +12,6 @@ export default function TransactionShow() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
 
-    // Get transaction ID from URL
     const transactionId = parseInt(window.location.pathname.split('/')[2]);
 
     useEffect(() => {

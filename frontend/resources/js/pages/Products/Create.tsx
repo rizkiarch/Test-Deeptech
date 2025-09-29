@@ -22,11 +22,10 @@ export default function ProductCreate() {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [successMessage, setSuccessMessage] = useState<string>('');
 
-    // Fetch categories on component mount
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await ApiService.getCategories(1, 100); // Get all categories
+                const response = await ApiService.getCategories(1, 100);
                 setCategories(response.data.data || []);
             } catch (error) {
                 console.error('Failed to fetch categories:', error);
@@ -58,7 +57,6 @@ export default function ProductCreate() {
             const response = await ApiService.createProduct(formDataToSend);
             setSuccessMessage('Product created successfully!');
 
-            // Reset form
             setFormData({
                 name: '',
                 description: '',
@@ -68,7 +66,6 @@ export default function ProductCreate() {
             setImageFile(null);
             setImagePreview('');
 
-            // Redirect after 2 seconds
             setTimeout(() => {
                 window.location.href = '/products';
             }, 2000);
@@ -89,7 +86,6 @@ export default function ProductCreate() {
 
         setFormData(prev => ({ ...prev, [name]: processedValue }));
 
-        // Clear error for this field
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -100,14 +96,12 @@ export default function ProductCreate() {
         if (file) {
             setImageFile(file);
 
-            // Create preview
             const reader = new FileReader();
             reader.onload = (e) => {
                 setImagePreview(e.target?.result as string);
             };
             reader.readAsDataURL(file);
 
-            // Clear image error
             if (errors.image) {
                 setErrors(prev => ({ ...prev, image: '' }));
             }

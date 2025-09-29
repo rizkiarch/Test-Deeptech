@@ -27,7 +27,6 @@ export default function CategoryCreate() {
             setSuccessMessage('Category created successfully!');
             setFormData({ name: '', description: '' });
 
-            // Redirect after 2 seconds using Inertia router
             setTimeout(() => {
                 router.visit('/categories', { preserveState: false });
             }, 2000);
@@ -46,7 +45,6 @@ export default function CategoryCreate() {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
 
-        // Clear error for this field
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }

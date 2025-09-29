@@ -5,7 +5,7 @@ interface User {
     first_name: string;
     last_name: string;
     email: string;
-    name?: string; // Computed property
+    name?: string;
 }
 
 interface AuthContextType {
@@ -34,7 +34,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Check if user is logged in on app start
     useEffect(() => {
         const savedUser = localStorage.getItem('user');
         const savedToken = localStorage.getItem('auth_token');
@@ -54,7 +53,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             setLoading(true);
 
-            // Call the actual login API through KrakenD Gateway
             const response = await fetch('http://localhost:8080/api/v1/auth/login', {
                 method: 'POST',
                 headers: {
@@ -68,7 +66,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             if (response.ok) {
                 const apiResponse = await response.json();
-                console.log('API Response:', apiResponse); // Debug log
 
                 if (apiResponse.status === 'success' && apiResponse.data.token && apiResponse.data.user) {
                     const userData = apiResponse.data.user;
@@ -77,15 +74,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         first_name: userData.first_name,
                         last_name: userData.last_name,
                         email: userData.email,
-                        name: `${userData.first_name} ${userData.last_name}` // Computed name
+                        name: `${userData.first_name} ${userData.last_name}`
                     };
 
                     setUser(user);
                     localStorage.setItem('user', JSON.stringify(user));
                     localStorage.setItem('auth_token', apiResponse.data.token);
-
-                    console.log('Token stored:', apiResponse.data.token); // Debug log
-                    console.log('User stored:', user); // Debug log
 
                     return true;
                 }
@@ -108,7 +102,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.removeItem('user');
         localStorage.removeItem('auth_token');
 
-        // Redirect to login page
         if (typeof window !== 'undefined') {
             window.location.href = '/login';
         }

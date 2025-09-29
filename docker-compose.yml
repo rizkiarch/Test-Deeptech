@@ -165,7 +165,7 @@ services:
       - DB_NAME=${MYSQL_DATABASE:-deeptech-db}
       - DB_PORT=3306
       - DATABASE_URL=mysql://${MYSQL_USER:-deeptech_user}:${MYSQL_PASSWORD:-deeptech_password}@mysql:3306/${MYSQL_DATABASE:-deeptech-db}
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-here}
+      - JWT_SECRET=${JWT_SECRET:-this-is-jwt-ikay}
       - JWT_EXPIRES_IN=7d
     networks:
       - microservices-network
@@ -199,7 +199,7 @@ services:
       - DB_NAME=${MYSQL_DATABASE:-deeptech-db}
       - DB_PORT=3306
       - DATABASE_URL=mysql://${MYSQL_USER:-deeptech_user}:${MYSQL_PASSWORD:-deeptech_password}@mysql:3306/${MYSQL_DATABASE:-deeptech-db}
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-here}
+      - JWT_SECRET=${JWT_SECRET:-this-is-jwt-ikay}
       - JWT_EXPIRES_IN=7d
       - UPLOAD_PATH=./uploads
       - MAX_FILE_SIZE=5242880

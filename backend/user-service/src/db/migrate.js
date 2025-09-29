@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 class MigrationRunner {
     static async run() {
         try {
-            console.log('🚀 Starting Drizzle migration...');
+            console.log('🚀 Starting migration...');
             console.log('='.repeat(50));
 
             const connection = await mysql.createConnection({
@@ -51,10 +51,10 @@ class MigrationRunner {
             await connection.end();
 
             console.log('='.repeat(50));
-            console.log('✅ Drizzle migration completed successfully!');
+            console.log('✅ migration completed successfully!');
 
         } catch (error) {
-            console.error('❌ Drizzle migration failed:', error.message);
+            console.error('❌ migration failed:', error.message);
             throw error;
         } finally {
             process.exit(0);

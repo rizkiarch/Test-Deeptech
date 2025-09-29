@@ -12,7 +12,6 @@ export default function ProductShow() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
 
-    // Get product ID from URL
     const productId = parseInt(window.location.pathname.split('/')[2]);
 
     useEffect(() => {

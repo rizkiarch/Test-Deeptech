@@ -1,8 +1,14 @@
 export interface User {
     id: number;
-    name: string;
+    name?: string;
+    first_name: string;
+    last_name: string;
     email: string;
+    birth_date: string;
+    gender: string;
     email_verified_at?: string;
+    created_at: string;
+    updated_at?: string;
 }
 
 export type PageProps<
@@ -19,14 +25,13 @@ export type PageProps<
     };
 };
 
-// New types for Categories and Products
 export interface Category {
     id: number;
     name: string;
     description: string;
     created_at: string;
     updated_at: string;
-    products?: Product[]; // Optional products array for show page
+    products?: Product[];
 }
 
 export interface Product {
@@ -55,7 +60,6 @@ export interface Transaction {
     updated_at: string;
 }
 
-// API Response types
 export interface ApiResponse<T> {
     success: boolean;
     message: string;
@@ -78,7 +82,6 @@ export interface PaginatedResponse<T> {
     };
 }
 
-// Form types
 export interface CategoryFormData {
     name: string;
     description: string;

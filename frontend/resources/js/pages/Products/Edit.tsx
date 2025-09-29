@@ -15,16 +15,18 @@ export default function ProductEdit() {
         category_id: 0,
         stock: 0,
     });
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [currentImage, setCurrentImage] = useState<string | null>(null);
+    const [currentImageFilename, setCurrentImageFilename] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [successMessage, setSuccessMessage] = useState<string>('');
     const [errorMessage, setErrorMessage] = useState<string>('');
 
-    // Get product ID from URL
     const productId = parseInt(window.location.pathname.split('/')[2]);
 
-    // Fetch categories for dropdown
     const { data: categoriesData, loading: categoriesLoading } = useCategories(1, 100);
     const categories = categoriesData?.data || [];
 
@@ -40,6 +42,12 @@ export default function ProductEdit() {
                     category_id: product.category_id || 0,
                     stock: product.stock || 0,
                 });
+
+                if (product.image) {
+                    const imageUrl = `http://localhost/uploads/${product.image}`;
+                    setCurrentImage(imageUrl);
+                    setCurrentImageFilename(product.image);
+                }
             } catch (error: any) {
                 setErrorMessage(error.response?.data?.message || 'Failed to load product');
             } finally {
@@ -59,16 +67,28 @@ export default function ProductEdit() {
         setErrorMessage('');
 
         try {
+            if (!formData.name || !formData.description || formData.category_id === 0 || formData.stock < 0) {
+                setErrorMessage('Please fill in all required fields');
+                return;
+            }
+
             const formDataToSend = new FormData();
-            formDataToSend.append('name', formData.name);
-            formDataToSend.append('description', formData.description);
+            formDataToSend.append('name', formData.name.trim());
+            formDataToSend.append('description', formData.description.trim());
             formDataToSend.append('category_id', formData.category_id.toString());
             formDataToSend.append('stock', formData.stock.toString());
+
+            if (imageFile) {
+                formDataToSend.append('image', imageFile);
+            } else if (currentImageFilename) {
+                formDataToSend.append('existing_image', currentImageFilename);
+            } else {
+                formDataToSend.append('remove_image', 'true');
+            }
 
             await ApiService.updateProduct(productId, formDataToSend);
             setSuccessMessage('Product updated successfully!');
 
-            // Redirect after success using Inertia router
             setTimeout(() => {
                 router.visit('/products', { preserveState: false });
             }, 2000);
@@ -86,6 +106,30 @@ export default function ProductEdit() {
     const clearMessages = () => {
         setSuccessMessage('');
         setErrorMessage('');
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removeImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+        setCurrentImage(null);
+        setCurrentImageFilename(null);
+        const fileInput = document.getElementById('image') as HTMLInputElement;
+        if (fileInput) {
+            fileInput.value = '';
+        }
     };
 
     return (
@@ -208,8 +252,62 @@ export default function ProductEdit() {
                                                     <div className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.stock}</div>
                                                 )}
                                             </div>
+                                        </div>
 
+                                        {/* Image Upload Section */}
+                                        <div>
+                                            <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Product Image
+                                            </label>
+                                            <div className="mt-1 flex items-center space-x-4">
+                                                <input
+                                                    type="file"
+                                                    id="image"
+                                                    accept="image/*"
+                                                    onChange={handleImageChange}
+                                                    className="block w-full text-sm text-gray-500 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-300"
+                                                />
+                                                {(imagePreview || currentImage) && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={removeImage}
+                                                        className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 dark:bg-red-900 dark:text-red-300"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {errors.image && (
+                                                <div className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.image}</div>
+                                            )}
 
+                                            {/* Image Preview */}
+                                            {imagePreview ? (
+                                                <div className="mt-3">
+                                                    <p className="text-sm text-green-600 dark:text-green-400 mb-2">✓ New Image Preview (will replace current):</p>
+                                                    <img
+                                                        src={imagePreview}
+                                                        alt="New product preview"
+                                                        className="h-32 w-32 object-cover rounded-lg border border-green-300 dark:border-green-600"
+                                                    />
+                                                </div>
+                                            ) : currentImage && currentImageFilename ? (
+                                                <div className="mt-3">
+                                                    <p className="text-sm text-blue-600 dark:text-blue-400 mb-2">✓ Current Image (will be kept):</p>
+                                                    <img
+                                                        src={currentImage}
+                                                        alt="Current product"
+                                                        className="h-32 w-32 object-cover rounded-lg border border-blue-300 dark:border-blue-600"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="mt-3">
+                                                    <p className="text-sm text-orange-600 dark:text-orange-400 mb-2">⚠ No Image (will be removed):</p>
+                                                    <div className="h-32 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 flex items-center justify-center">
+                                                        <span className="text-gray-500 dark:text-gray-400 text-sm">No Image</span>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div>
@@ -238,7 +336,7 @@ export default function ProductEdit() {
                                             </Link>
                                             <button
                                                 type="submit"
-                                                disabled={submitting || formData.category_id === 0}
+                                                disabled={submitting || formData.category_id === 0 || !formData.name.trim() || !formData.description.trim()}
                                                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                             >
                                                 {submitting ? 'Updating...' : 'Update Product'}

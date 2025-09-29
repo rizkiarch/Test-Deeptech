@@ -11,7 +11,6 @@ export default function CategoryShow() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
 
-    // Get category ID from URL
     const categoryId = parseInt(window.location.pathname.split('/')[2]);
 
     useEffect(() => {

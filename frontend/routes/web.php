@@ -15,7 +15,6 @@ Route::get('dashboard', function () {
     return Inertia::render('dashboard');
 })->name('dashboard');
 
-// Categories Routes
 Route::get('/categories', function () {
     return Inertia::render('Categories/Index');
 })->name('categories.index');
@@ -32,7 +31,6 @@ Route::get('/categories/{id}/edit', function ($id) {
     return Inertia::render('Categories/Edit', ['id' => $id]);
 })->name('categories.edit');
 
-// Products Routes
 Route::get('/products', function () {
     return Inertia::render('Products/Index');
 })->name('products.index');
@@ -49,7 +47,6 @@ Route::get('/products/{id}/edit', function ($id) {
     return Inertia::render('Products/Edit', ['id' => $id]);
 })->name('products.edit');
 
-// Transactions Routes
 Route::get('/transactions', function () {
     return Inertia::render('Transactions/Index');
 })->name('transactions.index');
@@ -69,6 +66,22 @@ Route::get('/transactions/{id}', function ($id) {
 Route::get('/transactions/{id}/edit', function ($id) {
     return Inertia::render('Transactions/Edit', ['id' => $id]);
 })->name('transactions.edit');
+
+Route::get('/users', function () {
+    return Inertia::render('Users/Index');
+})->name('users.index');
+
+Route::get('/users/create', function () {
+    return Inertia::render('Users/Create');
+})->name('users.create');
+
+Route::get('/users/{id}', function ($id) {
+    return Inertia::render('Users/Show', ['id' => $id]);
+})->name('users.show');
+
+Route::get('/users/{id}/edit', function ($id) {
+    return Inertia::render('Users/Edit', ['id' => $id]);
+})->name('users.edit');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

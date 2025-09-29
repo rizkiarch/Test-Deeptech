@@ -19,9 +19,18 @@ class ProductController extends Controller {
     }
 
     async updateProduct(req, res) {
+
         if (req.file) {
             req.body.image = req.file.filename;
         }
+
+        if (req.body.category_id) {
+            req.body.category_id = parseInt(req.body.category_id);
+        }
+        if (req.body.stock) {
+            req.body.stock = parseInt(req.body.stock);
+        }
+
         return this.handleRequest(req, res, ProductService.updateProduct, req.params.id, req.body, req);
     }
 

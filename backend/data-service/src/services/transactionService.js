@@ -35,7 +35,6 @@ class TransactionService {
             };
         }
 
-        // Validate quantity is a positive number
         if (isNaN(transactionData.quantity) || transactionData.quantity <= 0) {
             return {
                 message: 'Quantity must be a positive number',
@@ -104,7 +103,6 @@ class TransactionService {
             }
         }
 
-        // Validate quantity if provided
         if (transactionData.quantity !== undefined) {
             if (isNaN(transactionData.quantity) || transactionData.quantity <= 0) {
                 return {
@@ -114,7 +112,6 @@ class TransactionService {
             }
         }
 
-        // Get current product to calculate stock changes
         const currentProduct = await ProductModel.getProductById(transaction.product_id);
         if (!currentProduct) {
             return {
@@ -123,7 +120,6 @@ class TransactionService {
             };
         }
 
-        // Calculate stock adjustments
         const oldType = transaction.type;
         const oldQuantity = parseInt(transaction.quantity);
         const oldProductId = transaction.product_id;
@@ -132,17 +128,14 @@ class TransactionService {
         const newQuantity = transactionData.quantity ? parseInt(transactionData.quantity) : oldQuantity;
         const newProductId = transactionData.product_id || oldProductId;
 
-        // Revert old transaction effect on old product
         let oldProductNewStock = currentProduct.stock;
         if (oldType === 'stock_in') {
-            oldProductNewStock -= oldQuantity; // Remove previous stock_in
+            oldProductNewStock -= oldQuantity;
         } else {
-            oldProductNewStock += oldQuantity; // Restore previous stock_out
+            oldProductNewStock += oldQuantity;
         }
 
-        // Apply new transaction effect
         if (newProductId === oldProductId) {
-            // Same product, apply new transaction
             if (newType === 'stock_in') {
                 oldProductNewStock += newQuantity;
             } else {
@@ -155,13 +148,10 @@ class TransactionService {
                 oldProductNewStock -= newQuantity;
             }
 
-            // Update the product stock
             await ProductModel.updateStock(oldProductId, oldProductNewStock);
         } else {
-            // Different product
             await ProductModel.updateStock(oldProductId, oldProductNewStock);
 
-            // Apply to new product
             const targetProduct = newProduct || await ProductModel.getProductById(newProductId);
             let targetProductStock = targetProduct.stock;
 
@@ -193,7 +183,6 @@ class TransactionService {
             };
         }
 
-        // Get product to revert stock changes
         const product = await ProductModel.getProductById(transaction.product_id);
         if (!product) {
             return {
@@ -202,10 +191,8 @@ class TransactionService {
             };
         }
 
-        // Revert the transaction effect
         let newStock = product.stock;
         if (transaction.type === 'stock_in') {
-            // Remove the stock that was added
             newStock -= parseInt(transaction.quantity);
             if (newStock < 0) {
                 return {
@@ -214,14 +201,11 @@ class TransactionService {
                 };
             }
         } else {
-            // Restore the stock that was removed
             newStock += parseInt(transaction.quantity);
         }
 
-        // Update product stock
         await ProductModel.updateStock(transaction.product_id, newStock);
 
-        // Delete the transaction
         await TransactionModel.deleteTransaction(id);
         return { message: 'Transaction deleted successfully', statusCode: 200 };
     }
@@ -251,7 +235,6 @@ class TransactionService {
                 continue;
             }
 
-            // Validate quantity is a positive number
             if (isNaN(transactionData.quantity) || transactionData.quantity <= 0) {
                 errors.push({
                     index: i,

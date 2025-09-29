@@ -36,8 +36,15 @@ class ProductModel {
 
     static async updateProduct(id, productData) {
         const { name, description, image, categoryId, stock } = productData;
+
+        const safeName = name !== undefined ? name : null;
+        const safeDescription = description !== undefined ? description : null;
+        const safeImage = image !== undefined ? image : null;
+        const safeCategoryId = categoryId !== undefined ? categoryId : null;
+        const safeStock = stock !== undefined ? stock : null;
+
         const query = 'UPDATE products SET name = ?, description = ?, image = ?, category_id = ?, stock = ?, updated_at = NOW() WHERE id = ?';
-        const [result] = await pool.execute(query, [name, description, image, categoryId, stock, id]);
+        const [result] = await pool.execute(query, [safeName, safeDescription, safeImage, safeCategoryId, safeStock, id]);
         return result.affectedRows > 0;
     }
 

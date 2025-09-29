@@ -18,7 +18,6 @@ export default function Login() {
         try {
             const success = await login(email, password);
             if (success) {
-                // Redirect to dashboard using Inertia router
                 router.visit('/dashboard');
             } else {
                 setError('Invalid email or password');

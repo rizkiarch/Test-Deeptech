@@ -18,7 +18,6 @@ export default function CategoryEdit() {
     const [successMessage, setSuccessMessage] = useState<string>('');
     const [errorMessage, setErrorMessage] = useState<string>('');
 
-    // Get category ID from URL
     const categoryId = parseInt(window.location.pathname.split('/')[2]);
 
     useEffect(() => {
@@ -53,7 +52,6 @@ export default function CategoryEdit() {
             await ApiService.updateCategory(categoryId, formData);
             setSuccessMessage('Category updated successfully!');
 
-            // Redirect after success using Inertia router
             setTimeout(() => {
                 router.visit('/categories', { preserveState: false });
             }, 2000);

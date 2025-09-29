@@ -94,7 +94,6 @@ export const deleteFile = (filename) => {
 
 export const getFileUrl = (req, filename) => {
     if (!filename) return null;
-    // Use localhost for image URLs so they can be accessed from browser
     return `http://localhost/uploads/${filename}`;
 };
 

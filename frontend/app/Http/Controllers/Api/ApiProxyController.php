@@ -83,17 +83,14 @@ class ApiProxyController extends Controller
     {
         $headers = [];
 
-        // Forward authorization header
         if ($request->hasHeader('Authorization')) {
             $headers['Authorization'] = $request->header('Authorization');
         }
 
-        // Forward content type
         if ($request->hasHeader('Content-Type')) {
             $headers['Content-Type'] = $request->header('Content-Type');
         }
 
-        // Add standard headers
         $headers['X-Forwarded-For'] = $request->ip();
         $headers['X-Forwarded-Host'] = $request->getHost();
         $headers['X-Forwarded-Proto'] = $request->getScheme();

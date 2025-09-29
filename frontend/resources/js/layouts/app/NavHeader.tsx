@@ -24,6 +24,9 @@ export default function NavHeader() {
                             <Link href="/transactions" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
                                 Transactions
                             </Link>
+                            <Link href="/users" className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+                                Users
+                            </Link>
                         </div>
                     </div>
                     <div className="flex items-center space-x-4">

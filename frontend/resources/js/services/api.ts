@@ -18,8 +18,6 @@ class ApiService {
         this.api.interceptors.request.use(
             (config) => {
                 const token = localStorage.getItem('auth_token');
-                console.log('API Request:', config.method?.toUpperCase(), config.url);
-                console.log('Token exists:', !!token);
                 if (token) {
                     config.headers.Authorization = `Bearer ${token}`;
                 }
@@ -33,15 +31,12 @@ class ApiService {
 
         this.api.interceptors.response.use(
             (response) => {
-                console.log('API Response:', response.status, response.config.url);
-                console.log('Response data:', response.data);
                 return response;
             },
             (error) => {
                 console.error('API Error:', error.response?.status, error.config?.url);
                 console.error('Error details:', error.response?.data);
                 if (error.response?.status === 401) {
-                    console.log('Unauthorized - removing token and redirecting to login');
                     localStorage.removeItem('auth_token');
                     localStorage.removeItem('user');
                     window.location.href = '/login';
@@ -83,7 +78,6 @@ class ApiService {
         return this.api.delete(`/v1/users/${id}`);
     }
 
-    // Category methods
     async getCategories(page: number = 1, limit: number = 10): Promise<AxiosResponse> {
         return this.api.get(`/v1/categories?page=${page}&limit=${limit}`);
     }
@@ -104,7 +98,6 @@ class ApiService {
         return this.api.delete(`/v1/categories/${id}`);
     }
 
-    // Product methods
     async getProducts(page: number = 1, limit: number = 10): Promise<AxiosResponse> {
         return this.api.get(`/v1/products?page=${page}&limit=${limit}`);
     }

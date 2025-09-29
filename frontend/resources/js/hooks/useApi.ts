@@ -95,10 +95,8 @@ export function useCategories(page: number = 1, limit: number = 10) {
 
     const fetchCategories = async () => {
         try {
-            console.log('Fetching categories - page:', page, 'limit:', limit);
             setState(prev => ({ ...prev, loading: true, error: null }));
             const response = await ApiService.getCategories(page, limit);
-            console.log('Categories response:', response.data);
             setState(prev => ({
                 ...prev,
                 data: response.data,

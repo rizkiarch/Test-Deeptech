@@ -23,7 +23,6 @@ export default function TransactionsBulk() {
     const [errorMessage, setErrorMessage] = useState<string>('');
     const [errors, setErrors] = useState<Record<number, Record<string, string>>>({});
 
-    // Fetch products for dropdowns
     const { data: productsData, loading: productsLoading } = useProducts(1, 100);
     const products = productsData?.data || [];
 
@@ -36,7 +35,6 @@ export default function TransactionsBulk() {
             const newTransactions = transactions.filter((_, i) => i !== index);
             setTransactions(newTransactions);
 
-            // Remove errors for this index
             const newErrors = { ...errors };
             delete newErrors[index];
             setErrors(newErrors);
@@ -48,7 +46,6 @@ export default function TransactionsBulk() {
         newTransactions[index] = { ...newTransactions[index], [field]: value };
         setTransactions(newTransactions);
 
-        // Clear error for this field
         if (errors[index]?.[field]) {
             const newErrors = { ...errors };
             delete newErrors[index][field];
@@ -73,7 +70,6 @@ export default function TransactionsBulk() {
                 hasErrors = true;
             }
 
-            // Check if product has enough stock for stock_out
             if (transaction.type === 'stock_out') {
                 const product = products.find((p: any) => p.id === transaction.product_id);
                 if (product && transaction.quantity > product.stock) {
@@ -104,7 +100,6 @@ export default function TransactionsBulk() {
         setSuccessMessage('');
 
         try {
-            // Submit each transaction individually
             const promises = transactions.map(transaction =>
                 ApiService.createTransaction(transaction)
             );
@@ -113,7 +108,6 @@ export default function TransactionsBulk() {
 
             setSuccessMessage(`Successfully created ${transactions.length} transactions!`);
 
-            // Reset form after success
             setTimeout(() => {
                 setTransactions([{ product_id: 0, quantity: 1, type: 'stock_in', notes: '' }]);
                 setSuccessMessage('');
