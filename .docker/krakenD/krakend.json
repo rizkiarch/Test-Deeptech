@@ -3,7 +3,7 @@
   "version": 3,
   "name": "Microservices API Gateway",
   "timeout": "10000ms",
-  "cache_ttl": "300s",
+  "cache_ttl": "0s",
   "output_encoding": "json",
   "host": ["http://krakend:8080"],
   "port": 8080,

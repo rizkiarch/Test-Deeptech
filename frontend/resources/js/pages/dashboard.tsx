@@ -4,6 +4,7 @@ import { User } from '@/types';
 import ApiService from '@/services/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
+import NavHeader from '@/layouts/app/NavHeader';
 
 export default function Dashboard() {
     const { user, logout } = useAuth();
@@ -48,30 +49,7 @@ export default function Dashboard() {
             <Head title="Dashboard" />
 
             <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-                <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex justify-between h-16">
-                            <div className="flex items-center">
-                                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                                    DeepTech Dashboard
-                                </h1>
-                            </div>
-                            <div className="flex items-center space-x-4">
-                                <div className="flex items-center space-x-4">
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                                        Welcome, {user?.name || `${user?.first_name} ${user?.last_name}`}
-                                    </span>
-                                    <button
-                                        onClick={logout}
-                                        className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                    >
-                                        Logout
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </nav>
+                <NavHeader />
 
                 <div className="py-12">
                     <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -84,27 +62,23 @@ export default function Dashboard() {
                                     <h2 className="text-xl font-semibold mb-4">Services Health Status</h2>
                                     {healthStatus ? (
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            {Object.entries(healthStatus.services || {}).map(([service, status]: [string, any]) => (
-                                                <div
-                                                    key={service}
-                                                    className={`p-4 rounded-lg ${status.healthy
-                                                        ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                                                        : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                                                        }`}
-                                                >
-                                                    <h3 className="font-semibold capitalize">
-                                                        {service.replace('_', ' ')}
-                                                    </h3>
-                                                    <p className="text-sm">
-                                                        Status: {status.healthy ? 'Healthy' : 'Unhealthy'}
-                                                    </p>
-                                                    {status.response_time && (
-                                                        <p className="text-sm">
-                                                            Response Time: {Math.round(status.response_time * 1000)}ms
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            ))}
+                                            <div
+                                                className={`p-4 rounded-lg ${healthStatus.status === 'success'
+                                                    ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                                    : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                                                    }`}
+                                            >
+                                                <h3 className="font-semibold">User Service</h3>
+                                                <p className="text-sm">
+                                                    Status: {healthStatus.status === 'success' ? 'Healthy' : 'Unhealthy'}
+                                                </p>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                    {healthStatus.message}
+                                                </p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                    Last checked: {new Date(healthStatus.timestamp).toLocaleTimeString()}
+                                                </p>
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="animate-pulse">

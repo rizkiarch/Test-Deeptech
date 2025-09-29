@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { User, Category, ProductFormData } from '@/types';
 import ApiService from '@/services/api';

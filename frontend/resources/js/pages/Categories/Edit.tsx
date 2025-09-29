@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import ApiService from '@/services/api';
@@ -53,9 +53,9 @@ export default function CategoryEdit() {
             await ApiService.updateCategory(categoryId, formData);
             setSuccessMessage('Category updated successfully!');
 
-            // Redirect after success
+            // Redirect after success using Inertia router
             setTimeout(() => {
-                window.location.href = '/categories';
+                router.visit('/categories', { preserveState: false });
             }, 2000);
         } catch (error: any) {
             if (error.response?.data?.errors) {

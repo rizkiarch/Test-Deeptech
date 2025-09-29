@@ -77,7 +77,7 @@ export default function TransactionsCreate() {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'product_id' || name === 'quantity' ? parseInt(value) : 0
+            [name]: name === 'product_id' || name === 'quantity' ? parseInt(value) || 0 : value
         }));
 
         // Clear error for this field
@@ -135,6 +135,7 @@ export default function TransactionsCreate() {
                                             </label>
                                             <select
                                                 id="product_id"
+                                                name="product_id"
                                                 value={formData.product_id}
                                                 onChange={handleInputChange}
                                                 disabled={productsLoading}
@@ -146,7 +147,7 @@ export default function TransactionsCreate() {
                                                 </option>
                                                 {products.map((product: Product) => (
                                                     <option key={product.id} value={product.id}>
-                                                        {product.product_name} (Stock: {product.stock}) - {product.category_name}
+                                                        {product.name} (Stock: {product.stock}) - {(product as any).category_name || 'No Category'}
                                                     </option>
                                                 ))}
                                             </select>
@@ -161,7 +162,7 @@ export default function TransactionsCreate() {
                                                 <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
                                                     Selected Product Information
                                                 </h3>
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-blue-700 dark:text-blue-300">
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm text-blue-700 dark:text-blue-300">
                                                     <div>
                                                         <span className="font-medium">Name:</span> {selectedProduct.name}
                                                     </div>
@@ -169,10 +170,7 @@ export default function TransactionsCreate() {
                                                         <span className="font-medium">Current Stock:</span> {selectedProduct.stock}
                                                     </div>
                                                     <div>
-                                                        <span className="font-medium">Stock:</span> {selectedProduct.stock}
-                                                    </div>
-                                                    <div>
-                                                        <span className="font-medium">Category:</span> {selectedProduct.category_name || 'No Category'}
+                                                        <span className="font-medium">Category:</span> {(selectedProduct as any).category_name || 'No Category'}
                                                     </div>
                                                 </div>
                                             </div>
@@ -185,6 +183,7 @@ export default function TransactionsCreate() {
                                             </label>
                                             <select
                                                 id="type"
+                                                name="type"
                                                 value={formData.type}
                                                 onChange={handleInputChange}
                                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
@@ -206,6 +205,7 @@ export default function TransactionsCreate() {
                                             <input
                                                 type="number"
                                                 id="quantity"
+                                                name="quantity"
                                                 min="1"
                                                 value={formData.quantity}
                                                 onChange={handleInputChange}
@@ -233,6 +233,7 @@ export default function TransactionsCreate() {
                                             </label>
                                             <textarea
                                                 id="notes"
+                                                name="notes"
                                                 rows={3}
                                                 value={formData.notes}
                                                 onChange={handleInputChange}

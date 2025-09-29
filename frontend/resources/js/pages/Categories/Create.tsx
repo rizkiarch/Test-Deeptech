@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { User, CategoryFormData } from '@/types';
 import ApiService from '@/services/api';
@@ -27,9 +27,9 @@ export default function CategoryCreate() {
             setSuccessMessage('Category created successfully!');
             setFormData({ name: '', description: '' });
 
-            // Redirect after 2 seconds
+            // Redirect after 2 seconds using Inertia router
             setTimeout(() => {
-                window.location.href = '/categories';
+                router.visit('/categories', { preserveState: false });
             }, 2000);
         } catch (error: any) {
             if (error.response?.data?.errors) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import ApiService from '@/services/api';
@@ -68,9 +68,9 @@ export default function ProductEdit() {
             await ApiService.updateProduct(productId, formDataToSend);
             setSuccessMessage('Product updated successfully!');
 
-            // Redirect after success
+            // Redirect after success using Inertia router
             setTimeout(() => {
-                window.location.href = '/products';
+                router.visit('/products', { preserveState: false });
             }, 2000);
         } catch (error: any) {
             if (error.response?.data?.errors) {
