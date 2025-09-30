@@ -156,21 +156,18 @@ create_env_files() {
     mkdir -p backend/user-service
     cat > backend/user-service/.env << EOF
 # Database Configuration
-DB_HOST=mysql
+DB_HOST=localhost
 DB_PORT=3306
 DB_USER=deeptech_user
 DB_PASSWORD=deeptech_password
 DB_NAME=deeptech-db
 
-# Service Configuration
 PORT=5001
 NODE_ENV=development
 
-# JWT Configuration
 JWT_SECRET=this-is-jwt-ikay
 JWT_EXPIRES_IN=7d
 
-# CORS Configuration
 CORS_ORIGIN=http://localhost:3000
 EOF
     print_success "user-service .env created"
@@ -180,24 +177,20 @@ EOF
     mkdir -p backend/data-service
     cat > backend/data-service/.env << EOF
 # Database Configuration
-DB_HOST=mysql
+DB_HOST=localhost
 DB_PORT=3306
 DB_USER=deeptech_user
 DB_PASSWORD=deeptech_password
 DB_NAME=deeptech-db
 
-# Service Configuration
 PORT=5002
 NODE_ENV=development
 
-# JWT Configuration
 JWT_SECRET=this-is-jwt-ikay
 JWT_EXPIRES_IN=7d
 
-# CORS Configuration
 CORS_ORIGIN=http://localhost:3000
 
-# File Upload Configuration
 UPLOAD_PATH=./uploads
 MAX_FILE_SIZE=5242880
 EOF
@@ -208,90 +201,19 @@ EOF
     mkdir -p frontend
     cat > frontend/.env << EOF
 # Application Configuration
-APP_NAME="DeepTech Frontend"
-APP_ENV=development
-APP_KEY=base64:8OoALTVpZKDHV5IePwhm4LqLelncEUh8jvlrUt6TJ/Q=
-APP_DEBUG=true
-APP_URL=http://localhost
-
-# Localization
-APP_LOCALE=en
-APP_FALLBACK_LOCALE=en
-APP_FAKER_LOCALE=en_US
-
-# Maintenance
-APP_MAINTENANCE_DRIVER=file
-
-# PHP Configuration
-PHP_CLI_SERVER_WORKERS=4
-BCRYPT_ROUNDS=12
-
-# Logging
-LOG_CHANNEL=stack
-LOG_STACK=single
-LOG_DEPRECATIONS_CHANNEL=null
-LOG_LEVEL=debug
-
-# Database Configuration
-DB_CONNECTION=mysql
-DB_HOST=mysql
+DB_HOST=localhost
 DB_PORT=3306
-DB_DATABASE=deeptech-db
-DB_USERNAME=deeptech_user
+DB_USER=deeptech_user
 DB_PASSWORD=deeptech_password
+DB_NAME=deeptech-db
 
-# Session Configuration
-SESSION_DRIVER=database
-SESSION_LIFETIME=120
-SESSION_ENCRYPT=false
-SESSION_PATH=/
-SESSION_DOMAIN=null
+PORT=5001
+NODE_ENV=development
 
-# Cache Configuration
-BROADCAST_CONNECTION=log
-FILESYSTEM_DISK=local
-QUEUE_CONNECTION=database
-CACHE_STORE=database
-
-# Redis Configuration
-REDIS_CLIENT=phpredis
-REDIS_HOST=redis
-REDIS_PASSWORD=null
-REDIS_PORT=6379
-
-# Email Configuration
-MAIL_MAILER=log
-MAIL_SCHEME=null
-MAIL_HOST=127.0.0.1
-MAIL_PORT=2525
-MAIL_USERNAME=null
-MAIL_PASSWORD=null
-MAIL_FROM_ADDRESS="hello@example.com"
-MAIL_FROM_NAME="\${APP_NAME}"
-
-# AWS Configuration (Optional)
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_DEFAULT_REGION=us-east-1
-AWS_BUCKET=
-AWS_USE_PATH_STYLE_ENDPOINT=false
-
-# Vite Configuration
-VITE_APP_NAME="\${APP_NAME}"
-VITE_API_URL=http://localhost/api
-
-# Inertia Configuration
-INERTIA_SSR_ENABLED=false
-INERTIA_SSR_URL=http://127.0.0.1:13714
-
-# Microservices URLs
-API_GATEWAY_URL=http://krakend:8080
-USER_SERVICE_URL=http://user-service:5001
-DATA_SERVICE_URL=http://data-service:5002
-
-# JWT Configuration (Same as backend)
 JWT_SECRET=this-is-jwt-ikay
 JWT_EXPIRES_IN=7d
+
+CORS_ORIGIN=http://localhost:3000
 EOF
     print_success "frontend .env created"
     
@@ -312,8 +234,8 @@ build_docker_images() {
     echo
 }
 
-start_docker_infrastructure() {
-    print_header "${DOCKER} STARTING DOCKER INFRASTRUCTURE"
+start_core_infrastructure() {
+    print_header "${DOCKER} STARTING CORE INFRASTRUCTURE"
     
     print_step "Starting MySQL..."
     if docker-compose up -d mysql; then
@@ -333,12 +255,71 @@ start_docker_infrastructure() {
         exit 1
     fi
     
+    echo
+}
+
+start_microservices() {
+    print_header "${ROCKET} STARTING MICROSERVICES"
+    
+    # Setup Drizzle for Data Service first
+    print_step "Setting up Drizzle ORM..."
+    if npm run drizzle:setup 2>/dev/null || echo "Drizzle setup completed (or already configured)"; then
+        print_success "Drizzle setup completed"
+    else
+        print_warning "Drizzle setup may have issues, continuing..."
+    fi
+    
+    # Start User Service
+    print_step "Starting User Service..."
+    if docker-compose up -d user-service; then
+        print_success "User Service container started"
+        sleep 5  # Give time for database connection
+        wait_for_service "User Service" 5000 30
+    else
+        print_error "Failed to start User Service"
+        exit 1
+    fi
+    
+    # Start Data Service
+    print_step "Starting Data Service..."
+    if docker-compose up -d data-service; then
+        print_success "Data Service container started"
+        sleep 5  # Give time for database connection
+        wait_for_service "Data Service" 5002 30
+    else
+        print_error "Failed to start Data Service"
+        exit 1
+    fi
+    
+    # Generate and migrate database
+    print_step "Generating and migrating database schema..."
+    if npm run drizzle:generate 2>/dev/null && npm run drizzle:migrate 2>/dev/null; then
+        print_success "Database schema setup completed"
+    else
+        print_warning "Database schema setup may have issues, continuing..."
+    fi
+    
+    echo
+}
+
+start_gateway_and_web() {
+    print_header "${WEB} STARTING GATEWAY AND WEB SERVICES"
+    
     print_step "Starting KrakenD API Gateway..."
     if docker-compose up -d krakend; then
         print_success "KrakenD started"
         wait_for_service "KrakenD" 8080 30
     else
         print_error "Failed to start KrakenD"
+        exit 1
+    fi
+    
+    print_step "Starting Frontend Service..."
+    if docker-compose up -d frontend-service; then
+        print_success "Frontend Service started"
+        wait_for_service "Frontend Service" 6000 30
+    else
+        print_error "Failed to start Frontend Service"
         exit 1
     fi
     
@@ -349,58 +330,6 @@ start_docker_infrastructure() {
     else
         print_error "Failed to start Nginx"
         exit 1
-    fi
-    
-    echo
-}
-
-start_application_services() {
-    print_header "${ROCKET} STARTING APPLICATION SERVICES"
-    
-    # Start User Service
-    print_step "Starting User Service..."
-    if docker-compose up -d user-service; then
-        print_success "User Service started"
-        wait_for_service "User Service" 5000 30
-    else
-        print_error "Failed to start User Service"
-        exit 1
-    fi
-    
-    # Setup Drizzle for Data Service
-    print_step "Setting up Drizzle ORM..."
-    if npm run drizzle:setup 2>/dev/null || echo "Drizzle setup completed (or already configured)"; then
-        print_success "Drizzle setup completed"
-    else
-        print_warning "Drizzle setup may have issues, continuing..."
-    fi
-    
-    # Start Data Service
-    print_step "Starting Data Service..."
-    if docker-compose up -d data-service; then
-        print_success "Data Service started"
-        wait_for_service "Data Service" 5002 30
-    else
-        print_error "Failed to start Data Service"
-        exit 1
-    fi
-    
-    # Start Frontend Service
-    print_step "Starting Frontend Service..."
-    if docker-compose up -d frontend-service; then
-        print_success "Frontend Service started"
-        wait_for_service "Frontend Service" 6000 30
-    else
-        print_error "Failed to start Frontend Service"
-        exit 1
-    fi
-    
-    # Generate and migrate database
-    print_step "Generating and migrating database schema..."
-    if npm run drizzle:generate 2>/dev/null && npm run drizzle:migrate 2>/dev/null; then
-        print_success "Database schema setup completed"
-    else
-        print_warning "Database schema setup may have issues, continuing..."
     fi
     
     echo
@@ -553,8 +482,9 @@ main() {
     check_prerequisites
     create_env_files
     build_docker_images
-    start_docker_infrastructure
-    start_application_services
+    start_core_infrastructure
+    start_microservices
+    start_gateway_and_web
     setup_application_dependencies
     setup_database
     check_services_health
