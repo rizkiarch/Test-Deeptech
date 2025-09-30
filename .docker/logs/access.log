@@ -2433,3 +2433,5 @@
 172.18.0.1 - - [30/Sep/2025:01:26:54 +0000] "GET /build/assets/login-CISpIG2x.js HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36" "-"
 172.18.0.1 - - [30/Sep/2025:01:26:57 +0000] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 2299 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36" "-"
 127.0.0.1 - - [30/Sep/2025:01:27:25 +0000] "GET / HTTP/1.1" 200 2416 "-" "curl/8.5.0" "-"
+127.0.0.1 - - [30/Sep/2025:01:27:58 +0000] "GET / HTTP/1.1" 200 2387 "-" "curl/8.5.0" "-"
+127.0.0.1 - - [30/Sep/2025:01:28:31 +0000] "GET / HTTP/1.1" 200 2373 "-" "curl/8.5.0" "-"

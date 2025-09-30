@@ -231,7 +231,7 @@ LOG_LEVEL=debug
 
 # Database Configuration
 DB_CONNECTION=mysql
-DB_HOST=localhost
+DB_HOST=mysql
 DB_PORT=3306
 DB_DATABASE=deeptech-db
 DB_USERNAME=deeptech_user
@@ -395,37 +395,6 @@ start_gateway_and_web() {
 }
 
 
-setup_application_dependencies() {
-    print_header "${WEB} SETTING UP APPLICATION DEPENDENCIES"
-    
-    # Wait a bit for frontend to initialize
-    sleep 5
-    
-    # Install dependencies and build frontend assets
-    print_step "Installing frontend dependencies..."
-    if docker exec -it frontend-service composer install --no-dev --optimize-autoloader; then
-        print_success "Composer dependencies installed"
-    else
-        print_warning "Composer install may have issues"
-    fi
-    
-    print_step "Installing npm dependencies..."
-    if docker exec -it frontend-service npm install; then
-        print_success "npm dependencies installed"
-    else
-        print_warning "npm install may have issues"
-    fi
-    
-    print_step "Building frontend assets..."
-    if docker exec -it frontend-service npm run build; then
-        print_success "Frontend assets built successfully"
-    else
-        print_warning "Frontend asset build may have issues"
-    fi
-    
-    echo
-}
-
 
 setup_drizzle_database() {
     print_header "${DATABASE} SETTING UP DRIZZLE DATABASE SCHEMA"
@@ -486,6 +455,37 @@ setup_drizzle_database() {
         print_success "Data Service seeders completed"
     else
         print_warning "Data Service seeders may have issues"
+    fi
+    
+    echo
+}
+
+setup_application_dependencies() {
+    print_header "${WEB} SETTING UP APPLICATION DEPENDENCIES"
+    
+    # Wait a bit for frontend to initialize
+    sleep 5
+    
+    # Install dependencies and build frontend assets
+    print_step "Installing frontend dependencies..."
+    if docker exec -it frontend-service composer install --no-dev --optimize-autoloader; then
+        print_success "Composer dependencies installed"
+    else
+        print_warning "Composer install may have issues"
+    fi
+    
+    print_step "Installing npm dependencies..."
+    if docker exec -it frontend-service npm install; then
+        print_success "npm dependencies installed"
+    else
+        print_warning "npm install may have issues"
+    fi
+    
+    print_step "Building frontend assets..."
+    if docker exec -it frontend-service npm run build; then
+        print_success "Frontend assets built successfully"
+    else
+        print_warning "Frontend asset build may have issues"
     fi
     
     echo

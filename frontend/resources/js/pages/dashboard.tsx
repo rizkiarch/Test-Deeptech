@@ -56,7 +56,6 @@ export default function Dashboard() {
                         <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                             <div className="p-6 text-gray-900 dark:text-gray-100">
                                 <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-
                                 {/* Health Status */}
                                 <div className="mb-8">
                                     <h2 className="text-xl font-semibold mb-4">Services Health Status</h2>
@@ -68,12 +67,12 @@ export default function Dashboard() {
                                                     : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
                                                     }`}
                                             >
-                                                <h3 className="font-semibold">User Service</h3>
+                                                <h3 className="font-semibold">Service Health</h3>
                                                 <p className="text-sm">
                                                     Status: {healthStatus.status === 'success' ? 'Healthy' : 'Unhealthy'}
                                                 </p>
                                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {healthStatus.message}
+                                                    All Service Is Running
                                                 </p>
                                                 <p className="text-xs text-gray-500 dark:text-gray-400">
                                                     Last checked: {new Date(healthStatus.timestamp).toLocaleTimeString()}
@@ -89,154 +88,6 @@ export default function Dashboard() {
                                             </div>
                                         </div>
                                     )}
-                                </div>
-
-                                {/* Users Section */}
-                                <div className="mb-8">
-                                    <h2 className="text-xl font-semibold mb-4">Recent Users</h2>
-                                    {usersLoading ? (
-                                        <div className="animate-pulse">
-                                            <div className="space-y-3">
-                                                {[...Array(3)].map((_, i) => (
-                                                    <div key={i} className="h-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ) : usersError ? (
-                                        <div className="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 p-4 rounded-lg">
-                                            <p>Error loading users: {usersError}</p>
-                                            <p className="text-sm mt-1">Make sure the User Service is running and accessible.</p>
-                                        </div>
-                                    ) : users ? (
-                                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                                            <div className="space-y-3">
-                                                {users.data?.map((user: any) => (
-                                                    <div key={user.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded">
-                                                        <div>
-                                                            <p className="font-medium">{user.name}</p>
-                                                            <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
-                                                        </div>
-                                                        <span className="text-sm text-gray-500">ID: {user.id}</span>
-                                                    </div>
-                                                )) || <p>No users found</p>}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <p>No user data available</p>
-                                    )}
-                                </div>
-
-                                {/* Quick Actions Section */}
-                                <div className="mt-8">
-                                    <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-                                        <a
-                                            href="/categories"
-                                            className="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors text-center font-medium"
-                                        >
-                                            Manage Categories
-                                        </a>
-
-                                        <a
-                                            href="/products"
-                                            className="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors text-center font-medium"
-                                        >
-                                            Manage Products
-                                        </a>
-
-                                        <a
-                                            href="/transactions"
-                                            className="bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors text-center font-medium"
-                                        >
-                                            Manage Transactions
-                                        </a>
-
-                                        <a
-                                            href="/users"
-                                            className="bg-indigo-600 text-white px-4 py-3 rounded-lg hover:bg-indigo-700 transition-colors text-center font-medium"
-                                        >
-                                            Manage Users
-                                        </a>
-
-                                        <a
-                                            href="/categories/create"
-                                            className="bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition-colors text-center font-medium"
-                                        >
-                                            Add Category
-                                        </a>
-
-                                        <a
-                                            href="/products/create"
-                                            className="bg-orange-600 text-white px-4 py-3 rounded-lg hover:bg-orange-700 transition-colors text-center font-medium"
-                                        >
-                                            Add Product
-                                        </a>
-
-                                        <a
-                                            href="/transactions/create"
-                                            className="bg-yellow-600 text-white px-4 py-3 rounded-lg hover:bg-yellow-700 transition-colors text-center font-medium"
-                                        >
-                                            Add Transaction
-                                        </a>
-
-                                        <a
-                                            href="/users/create"
-                                            className="bg-cyan-600 text-white px-4 py-3 rounded-lg hover:bg-cyan-700 transition-colors text-center font-medium"
-                                        >
-                                            Add User
-                                        </a>
-                                    </div>
-                                </div>
-
-                                {/* API Test Section */}
-                                <div className="mt-8">
-                                    <h2 className="text-xl font-semibold mb-4">API Test</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <button
-                                            onClick={async () => {
-                                                try {
-                                                    const response = await ApiService.get('/v1/users');
-                                                    alert('Check console for Users API response');
-                                                } catch (error) {
-                                                    console.error('Users API Error:', error);
-                                                    alert('Users API call failed - check console');
-                                                }
-                                            }}
-                                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                                        >
-                                            Test Users API
-                                        </button>
-
-                                        <button
-                                            onClick={async () => {
-                                                try {
-                                                    const response = await ApiService.get('/v1/categories');
-                                                    alert('Check console for Categories API response');
-                                                } catch (error) {
-                                                    console.error('Categories API Error:', error);
-                                                    alert('Categories API call failed - check console');
-                                                }
-                                            }}
-                                            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                                        >
-                                            Test Categories API
-                                        </button>
-
-                                        <button
-                                            onClick={async () => {
-                                                try {
-                                                    const response = await ApiService.get('/v1/products');
-                                                    alert('Check console for Products API response');
-                                                } catch (error) {
-                                                    console.error('Products API Error:', error);
-                                                    alert('Products API call failed - check console');
-                                                }
-                                            }}
-                                            className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
-                                        >
-                                            Test Products API
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
