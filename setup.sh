@@ -336,35 +336,61 @@ start_core_infrastructure() {
     echo
 }
 
+start_microservices() {
+    print_header "${ROCKET} STARTING MICROSERVICES"
+    
+    # Start User Service
+    print_step "Starting User Service..."
+    if docker-compose up -d user-service; then
+        print_success "User Service container started"
+        sleep 5  # Give time for database connection
+        wait_for_service "User Service" 5000 30
+    else
+        print_error "Failed to start User Service"
+        exit 1
+    fi
+    
+    # Start Data Service
+    print_step "Starting Data Service..."
+    if docker-compose up -d data-service; then
+        print_success "Data Service container started"
+        sleep 5  # Give time for database connection
+        wait_for_service "Data Service" 5002 30
+    else
+        print_error "Failed to start Data Service"
+        exit 1
+    fi
+    
+    echo
+}
+
 setup_drizzle_database() {
     print_header "${DATABASE} SETTING UP DRIZZLE DATABASE SCHEMA"
     
+    print_step "All microservices are ready, now setting up database schema..."
+    
     # Step 1: Setup Drizzle for User Service
     print_step "Step 1: Setting up Drizzle for User Service..."
-    cd backend/user-service
-    if npm run drizzle:setup 2>/dev/null; then
+    if docker exec -it user-service npm run drizzle:setup 2>/dev/null; then
         print_success "User Service Drizzle setup completed"
     else
         print_warning "User Service Drizzle setup may have issues, continuing..."
     fi
-    cd ../..
     
     # Step 2: Generate and migrate Data Service schema
     print_step "Step 2: Generating Data Service schema..."
-    cd backend/data-service
-    if npm run drizzle:generate 2>/dev/null; then
+    if docker exec -it data-service npm run drizzle:generate 2>/dev/null; then
         print_success "Data Service schema generated"
     else
         print_warning "Data Service schema generation may have issues"
     fi
     
     print_step "Step 3: Running Data Service migrations..."
-    if npm run drizzle:migrate 2>/dev/null; then
+    if docker exec -it data-service npm run drizzle:migrate 2>/dev/null; then
         print_success "Data Service migrations completed"
     else
         print_warning "Data Service migrations may have issues"
     fi
-    cd ../..
     
     echo
 }
@@ -614,8 +640,8 @@ main() {
     create_env_files
     build_docker_images
     start_core_infrastructure
-    setup_drizzle_database
     start_microservices
+    setup_drizzle_database
     start_gateway_and_web
     setup_application_dependencies
     setup_laravel_database
