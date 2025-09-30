@@ -156,7 +156,7 @@ create_env_files() {
     mkdir -p backend/user-service
     cat > backend/user-service/.env << EOF
 # Database Configuration
-DB_HOST=localhost
+DB_HOST=mysql
 DB_PORT=3306
 DB_USER=deeptech_user
 DB_PASSWORD=deeptech_password
@@ -180,7 +180,7 @@ EOF
     mkdir -p backend/data-service
     cat > backend/data-service/.env << EOF
 # Database Configuration
-DB_HOST=localhost
+DB_HOST=mysql
 DB_PORT=3306
 DB_USER=deeptech_user
 DB_PASSWORD=deeptech_password
