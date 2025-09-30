@@ -56,7 +56,7 @@ export default function TransactionsIndex() {
                             <div className="p-6 text-gray-900 dark:text-gray-100">
                                 {/* Header */}
                                 <div className="flex justify-between items-center mb-6">
-                                    <h1 className="text-2xl font-bold">Recent Transactions</h1>
+                                    <h1 className="text-2xl font-bold">History Transactions</h1>
                                     <div className="flex space-x-2">
                                         <Link
                                             href="/transactions/create"
