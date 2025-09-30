@@ -435,30 +435,60 @@ setup_drizzle_database() {
     
     print_step "All containers are ready, now setting up database schema..."
     
-    # Step 1: Setup Drizzle for User Service
-    print_step "Step 1: Setting up Drizzle for User Service..."
-    print_step "Executing: docker exec user-service npm run drizzle:setup"
-    if docker exec user-service npm run drizzle:setup; then
-        print_success "User Service Drizzle setup completed"
+    # Step 1: Fix npm dependencies and setup User Service
+    print_step "Step 1: Installing User Service dependencies..."
+    if docker exec user-service npm install; then
+        print_success "User Service dependencies installed"
     else
-        print_warning "User Service Drizzle setup may have issues, continuing..."
+        print_warning "User Service dependency installation may have issues"
     fi
     
-    # Step 2: Generate and migrate Data Service schema
-    print_step "Step 2: Generating Data Service schema..."
-    print_step "Executing: docker exec data-service npm run drizzle:generate"
-    if docker exec data-service npm run drizzle:generate; then
-        print_success "Data Service schema generated"
+    print_step "Step 2: Running User Service migrations directly..."
+    if docker exec user-service npm run drizzle:migrate 2>/dev/null; then
+        print_success "User Service migrations completed"
     else
-        print_warning "Data Service schema generation may have issues"
+        print_warning "User Service migrations may have issues, trying alternative..."
+        # Try running the migration file directly
+        if docker exec user-service node src/db/migrate.js run 2>/dev/null; then
+            print_success "User Service migrations completed (direct execution)"
+        else
+            print_warning "User Service migrations failed"
+        fi
     fi
     
-    print_step "Step 3: Running Data Service migrations..."
-    print_step "Executing: docker exec data-service npm run drizzle:migrate"
-    if docker exec data-service npm run drizzle:migrate; then
+    # Step 3: Setup Data Service
+    print_step "Step 3: Installing Data Service dependencies..."
+    if docker exec data-service npm install; then
+        print_success "Data Service dependencies installed"
+    else
+        print_warning "Data Service dependency installation may have issues"
+    fi
+    
+    print_step "Step 4: Running Data Service migrations..."
+    if docker exec data-service npm run drizzle:migrate 2>/dev/null; then
         print_success "Data Service migrations completed"
     else
-        print_warning "Data Service migrations may have issues"
+        print_warning "Data Service migrations may have issues, trying alternative..."
+        # Try running the migration file directly
+        if docker exec data-service node src/db/migrate.js run 2>/dev/null; then
+            print_success "Data Service migrations completed (direct execution)"
+        else
+            print_warning "Data Service migrations failed"
+        fi
+    fi
+    
+    # Step 5: Run seeders
+    print_step "Step 5: Running database seeders..."
+    if docker exec user-service npm run drizzle:seed 2>/dev/null; then
+        print_success "User Service seeders completed"
+    else
+        print_warning "User Service seeders may have issues"
+    fi
+    
+    if docker exec data-service npm run drizzle:seed 2>/dev/null; then
+        print_success "Data Service seeders completed"
+    else
+        print_warning "Data Service seeders may have issues"
     fi
     
     echo
