@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import fs from 'fs';
 import path from 'path';
