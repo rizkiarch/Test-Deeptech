@@ -364,65 +364,6 @@ start_microservices() {
     echo
 }
 
-setup_drizzle_database() {
-    print_header "${DATABASE} SETTING UP DRIZZLE DATABASE SCHEMA"
-    
-    print_step "All microservices are ready, now setting up database schema..."
-    
-    # Step 1: Setup Drizzle for User Service
-    print_step "Step 1: Setting up Drizzle for User Service..."
-    if docker exec -it user-service npm run drizzle:setup 2>/dev/null; then
-        print_success "User Service Drizzle setup completed"
-    else
-        print_warning "User Service Drizzle setup may have issues, continuing..."
-    fi
-    
-    # Step 2: Generate and migrate Data Service schema
-    print_step "Step 2: Generating Data Service schema..."
-    if docker exec -it data-service npm run drizzle:generate 2>/dev/null; then
-        print_success "Data Service schema generated"
-    else
-        print_warning "Data Service schema generation may have issues"
-    fi
-    
-    print_step "Step 3: Running Data Service migrations..."
-    if docker exec -it data-service npm run drizzle:migrate 2>/dev/null; then
-        print_success "Data Service migrations completed"
-    else
-        print_warning "Data Service migrations may have issues"
-    fi
-    
-    echo
-}
-
-start_microservices() {
-    print_header "${ROCKET} STARTING MICROSERVICES"
-    
-    # Start User Service
-    print_step "Starting User Service..."
-    if docker-compose up -d user-service; then
-        print_success "User Service container started"
-        sleep 5  # Give time for database connection
-        wait_for_service "User Service" 5000 30
-    else
-        print_error "Failed to start User Service"
-        exit 1
-    fi
-    
-    # Start Data Service
-    print_step "Starting Data Service..."
-    if docker-compose up -d data-service; then
-        print_success "Data Service container started"
-        sleep 5  # Give time for database connection
-        wait_for_service "Data Service" 5002 30
-    else
-        print_error "Failed to start Data Service"
-        exit 1
-    fi
-    
-    echo
-}
-
 start_gateway_and_web() {
     print_header "${WEB} STARTING GATEWAY AND WEB SERVICES"
     
@@ -451,6 +392,40 @@ start_gateway_and_web() {
     else
         print_error "Failed to start Nginx"
         exit 1
+    fi
+    
+    echo
+}
+
+setup_drizzle_database() {
+    print_header "${DATABASE} SETTING UP DRIZZLE DATABASE SCHEMA"
+    
+    print_step "All containers are ready, now setting up database schema..."
+    
+    # Step 1: Setup Drizzle for User Service
+    print_step "Step 1: Setting up Drizzle for User Service..."
+    print_step "Executing: docker exec user-service npm run drizzle:setup"
+    if docker exec user-service npm run drizzle:setup; then
+        print_success "User Service Drizzle setup completed"
+    else
+        print_warning "User Service Drizzle setup may have issues, continuing..."
+    fi
+    
+    # Step 2: Generate and migrate Data Service schema
+    print_step "Step 2: Generating Data Service schema..."
+    print_step "Executing: docker exec data-service npm run drizzle:generate"
+    if docker exec data-service npm run drizzle:generate; then
+        print_success "Data Service schema generated"
+    else
+        print_warning "Data Service schema generation may have issues"
+    fi
+    
+    print_step "Step 3: Running Data Service migrations..."
+    print_step "Executing: docker exec data-service npm run drizzle:migrate"
+    if docker exec data-service npm run drizzle:migrate; then
+        print_success "Data Service migrations completed"
+    else
+        print_warning "Data Service migrations may have issues"
     fi
     
     echo
@@ -641,9 +616,9 @@ main() {
     build_docker_images
     start_core_infrastructure
     start_microservices
-    setup_drizzle_database
     start_gateway_and_web
     setup_application_dependencies
+    setup_drizzle_database
     setup_laravel_database
     check_services_health
     print_final_info
