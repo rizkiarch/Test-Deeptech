@@ -315,9 +315,9 @@ build_docker_images() {
 start_core_services() {
     print_header "${DOCKER} STARTING CORE SERVICES"
     
-    print_step "Starting MySQL, Redis, KrakenD, and Nginx..."
-    if docker-compose up -d mysql redis krakend nginx; then
-        print_success "Core services started"
+    print_step "Starting MySQL and Redis first..."
+    if docker-compose up -d mysql redis; then
+        print_success "Database services started"
         
         # Wait for MySQL to be ready
         wait_for_service "MySQL" 3306 60
@@ -326,7 +326,7 @@ start_core_services() {
         wait_for_service "Redis" 6379 30
         
     else
-        print_error "Failed to start core services"
+        print_error "Failed to start database services"
         exit 1
     fi
     echo
@@ -374,19 +374,56 @@ start_microservices() {
     echo
 }
 
+start_gateway_and_nginx() {
+    print_header "${DOCKER} STARTING GATEWAY AND NGINX"
+    
+    print_step "Starting KrakenD API Gateway..."
+    if docker-compose up -d krakend; then
+        print_success "KrakenD started"
+        wait_for_service "KrakenD" 8080 30
+    else
+        print_error "Failed to start KrakenD"
+        exit 1
+    fi
+    
+    print_step "Starting Nginx..."
+    if docker-compose up -d nginx; then
+        print_success "Nginx started"
+        wait_for_service "Nginx" 80 30
+    else
+        print_error "Failed to start Nginx"
+        exit 1
+    fi
+    echo
+}
+
 start_frontend() {
     print_header "${WEB} STARTING FRONTEND"
     
     print_step "Starting Frontend service..."
-    if docker-compose up -d frontend; then
+    if docker-compose up -d frontend-service; then
         print_success "Frontend service started"
         
         # Wait a bit for frontend to initialize
         sleep 5
         
-        # Build frontend assets
+        # Install dependencies and build frontend assets
+        print_step "Installing frontend dependencies..."
+        if docker exec -it frontend-service composer install --no-dev --optimize-autoloader; then
+            print_success "Composer dependencies installed"
+        else
+            print_warning "Composer install may have issues"
+        fi
+        
+        print_step "Installing npm dependencies..."
+        if docker exec -it frontend-service npm install; then
+            print_success "npm dependencies installed"
+        else
+            print_warning "npm install may have issues"
+        fi
+        
         print_step "Building frontend assets..."
-        if docker exec -it frontend npm run build; then
+        if docker exec -it frontend-service npm run build; then
             print_success "Frontend assets built successfully"
         else
             print_warning "Frontend asset build may have issues"
@@ -405,7 +442,7 @@ setup_database() {
     print_step "Running database migrations and seeders..."
     
     # Try automatic seeder first
-    if docker exec -it frontend php artisan migrate --seed --force 2>/dev/null; then
+    if docker exec -it frontend-service php artisan migrate --seed --force 2>/dev/null; then
         print_success "Database migrations and seeders completed"
     else
         print_warning "Automatic seeder failed, trying manual session table creation..."
@@ -435,9 +472,10 @@ check_services_health() {
     print_header "🏥 CHECKING SERVICES HEALTH"
     
     local services=(
-        "Frontend:80"
+        "Nginx Frontend:80"
+        "Frontend Service:6000"
         "KrakenD API Gateway:8080"
-        "User Service:5001"
+        "User Service:5000"
         "Data Service:5002"
         "MySQL:3306"
         "Redis:6379"
@@ -517,6 +555,7 @@ main() {
     start_core_services
     start_microservices
     start_frontend
+    start_gateway_and_nginx
     setup_database
     check_services_health
     print_final_info

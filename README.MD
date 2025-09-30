@@ -38,7 +38,7 @@ Buat file `.env` di setiap direktori berikut dengan isi yang sama:
 #### 1️⃣ **File: `backend/user-service/.env`**
 ```bash
 # Database Configuration
-DB_HOST=localhost
+DB_HOST=mysql
 DB_PORT=3306
 DB_USER=deeptech_user
 DB_PASSWORD=deeptech_password
@@ -59,7 +59,7 @@ CORS_ORIGIN=http://localhost:3000
 #### 2️⃣ **File: `backend/data-service/.env`**
 ```bash
 # Database Configuration
-DB_HOST=localhost
+DB_HOST=mysql
 DB_PORT=3306
 DB_USER=deeptech_user
 DB_PASSWORD=deeptech_password
