@@ -162,12 +162,15 @@ DB_USER=deeptech_user
 DB_PASSWORD=deeptech_password
 DB_NAME=deeptech-db
 
+# Service Configuration
 PORT=5001
 NODE_ENV=development
 
+# JWT Configuration
 JWT_SECRET=this-is-jwt-ikay
 JWT_EXPIRES_IN=7d
 
+# CORS Configuration
 CORS_ORIGIN=http://localhost:3000
 EOF
     print_success "user-service .env created"
@@ -183,14 +186,18 @@ DB_USER=deeptech_user
 DB_PASSWORD=deeptech_password
 DB_NAME=deeptech-db
 
+# Service Configuration
 PORT=5002
 NODE_ENV=development
 
+# JWT Configuration
 JWT_SECRET=this-is-jwt-ikay
 JWT_EXPIRES_IN=7d
 
+# CORS Configuration
 CORS_ORIGIN=http://localhost:3000
 
+# File Upload Configuration
 UPLOAD_PATH=./uploads
 MAX_FILE_SIZE=5242880
 EOF
@@ -201,19 +208,90 @@ EOF
     mkdir -p frontend
     cat > frontend/.env << EOF
 # Application Configuration
+APP_NAME="DeepTech Frontend"
+APP_ENV=development
+APP_KEY=base64:8OoALTVpZKDHV5IePwhm4LqLelncEUh8jvlrUt6TJ/Q=
+APP_DEBUG=true
+APP_URL=http://localhost
+
+# Localization
+APP_LOCALE=en
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=en_US
+
+# Maintenance
+APP_MAINTENANCE_DRIVER=file
+
+# PHP Configuration
+PHP_CLI_SERVER_WORKERS=4
+BCRYPT_ROUNDS=12
+
+# Logging
+LOG_CHANNEL=stack
+LOG_STACK=single
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=debug
+
+# Database Configuration
+DB_CONNECTION=mysql
 DB_HOST=localhost
 DB_PORT=3306
-DB_USER=deeptech_user
+DB_DATABASE=deeptech-db
+DB_USERNAME=deeptech_user
 DB_PASSWORD=deeptech_password
-DB_NAME=deeptech-db
 
-PORT=5001
-NODE_ENV=development
+# Session Configuration
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+SESSION_DOMAIN=null
 
+# Cache Configuration
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+
+# Redis Configuration
+REDIS_CLIENT=phpredis
+REDIS_HOST=redis
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+# Email Configuration
+MAIL_MAILER=log
+MAIL_SCHEME=null
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="\${APP_NAME}"
+
+# AWS Configuration (Optional)
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=
+AWS_USE_PATH_STYLE_ENDPOINT=false
+
+# Vite Configuration
+VITE_APP_NAME="\${APP_NAME}"
+VITE_API_URL=http://localhost/api
+
+# Inertia Configuration
+INERTIA_SSR_ENABLED=false
+INERTIA_SSR_URL=http://127.0.0.1:13714
+
+# Microservices URLs
+API_GATEWAY_URL=http://krakend:8080
+USER_SERVICE_URL=http://user-service:5001
+DATA_SERVICE_URL=http://data-service:5002
+
+# JWT Configuration (Same as backend)
 JWT_SECRET=this-is-jwt-ikay
 JWT_EXPIRES_IN=7d
-
-CORS_ORIGIN=http://localhost:3000
 EOF
     print_success "frontend .env created"
     
@@ -258,16 +336,41 @@ start_core_infrastructure() {
     echo
 }
 
+setup_drizzle_database() {
+    print_header "${DATABASE} SETTING UP DRIZZLE DATABASE SCHEMA"
+    
+    # Step 1: Setup Drizzle for User Service
+    print_step "Step 1: Setting up Drizzle for User Service..."
+    cd backend/user-service
+    if npm run drizzle:setup 2>/dev/null; then
+        print_success "User Service Drizzle setup completed"
+    else
+        print_warning "User Service Drizzle setup may have issues, continuing..."
+    fi
+    cd ../..
+    
+    # Step 2: Generate and migrate Data Service schema
+    print_step "Step 2: Generating Data Service schema..."
+    cd backend/data-service
+    if npm run drizzle:generate 2>/dev/null; then
+        print_success "Data Service schema generated"
+    else
+        print_warning "Data Service schema generation may have issues"
+    fi
+    
+    print_step "Step 3: Running Data Service migrations..."
+    if npm run drizzle:migrate 2>/dev/null; then
+        print_success "Data Service migrations completed"
+    else
+        print_warning "Data Service migrations may have issues"
+    fi
+    cd ../..
+    
+    echo
+}
+
 start_microservices() {
     print_header "${ROCKET} STARTING MICROSERVICES"
-    
-    # Setup Drizzle for Data Service first
-    print_step "Setting up Drizzle ORM..."
-    if npm run drizzle:setup 2>/dev/null || echo "Drizzle setup completed (or already configured)"; then
-        print_success "Drizzle setup completed"
-    else
-        print_warning "Drizzle setup may have issues, continuing..."
-    fi
     
     # Start User Service
     print_step "Starting User Service..."
@@ -289,14 +392,6 @@ start_microservices() {
     else
         print_error "Failed to start Data Service"
         exit 1
-    fi
-    
-    # Generate and migrate database
-    print_step "Generating and migrating database schema..."
-    if npm run drizzle:generate 2>/dev/null && npm run drizzle:migrate 2>/dev/null; then
-        print_success "Database schema setup completed"
-    else
-        print_warning "Database schema setup may have issues, continuing..."
     fi
     
     echo
@@ -366,19 +461,46 @@ setup_application_dependencies() {
     echo
 }
 
-setup_database() {
-    print_header "${DATABASE} SETTING UP DATABASE"
+setup_laravel_database() {
+    print_header "${WEB} SETTING UP LARAVEL DATABASE"
     
-    print_step "Running database migrations and seeders..."
-    
-    # Try automatic seeder first
-    if docker exec -it frontend-service php artisan migrate --seed --force 2>/dev/null; then
-        print_success "Database migrations and seeders completed"
+    # Step 4: Run Laravel migrations
+    print_step "Step 4: Running Laravel database migrations..."
+    if docker exec -it frontend-service php artisan migrate --force 2>/dev/null; then
+        print_success "Laravel migrations completed"
     else
-        print_warning "Automatic seeder failed, trying manual session table creation..."
+        print_warning "Laravel migrations may have issues"
+    fi
+    
+    # Step 5: Create sessions table
+    print_step "Step 5: Creating sessions table..."
+    if docker exec -it frontend-service php artisan session:table 2>/dev/null; then
+        print_success "Sessions table migration created"
         
-        # Manual session table creation
-        print_step "Creating sessions table manually..."
+        # Run the session table migration
+        if docker exec -it frontend-service php artisan migrate --force 2>/dev/null; then
+            print_success "Sessions table created"
+        else
+            # Manual session table creation as fallback
+            print_warning "Automatic session table creation failed, creating manually..."
+            docker exec -i microservices-mysql mysql -u root -proot << EOF
+USE \`deeptech-db\`;
+CREATE TABLE IF NOT EXISTS \`sessions\` (
+    \`id\` varchar(255) NOT NULL,
+    \`user_id\` bigint unsigned DEFAULT NULL,
+    \`ip_address\` varchar(45) DEFAULT NULL,
+    \`user_agent\` text,
+    \`payload\` longtext NOT NULL,
+    \`last_activity\` int NOT NULL,
+    PRIMARY KEY (\`id\`),
+    KEY \`sessions_user_id_index\` (\`user_id\`),
+    KEY \`sessions_last_activity_index\` (\`last_activity\`)
+);
+EOF
+            print_success "Sessions table created manually"
+        fi
+    else
+        print_warning "Session table command failed, creating manually..."
         docker exec -i microservices-mysql mysql -u root -proot << EOF
 USE \`deeptech-db\`;
 CREATE TABLE IF NOT EXISTS \`sessions\` (
@@ -395,6 +517,15 @@ CREATE TABLE IF NOT EXISTS \`sessions\` (
 EOF
         print_success "Sessions table created manually"
     fi
+    
+    # Step 6: Generate application key
+    print_step "Step 6: Generating Laravel application key..."
+    if docker exec -it frontend-service php artisan key:generate --force 2>/dev/null; then
+        print_success "Laravel application key generated"
+    else
+        print_warning "Application key generation may have issues"
+    fi
+    
     echo
 }
 
@@ -483,10 +614,11 @@ main() {
     create_env_files
     build_docker_images
     start_core_infrastructure
+    setup_drizzle_database
     start_microservices
     start_gateway_and_web
     setup_application_dependencies
-    setup_database
+    setup_laravel_database
     check_services_health
     print_final_info
     
