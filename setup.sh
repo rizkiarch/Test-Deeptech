@@ -312,34 +312,56 @@ build_docker_images() {
     echo
 }
 
-start_core_services() {
-    print_header "${DOCKER} STARTING CORE SERVICES"
+start_docker_infrastructure() {
+    print_header "${DOCKER} STARTING DOCKER INFRASTRUCTURE"
     
-    print_step "Starting MySQL and Redis first..."
-    if docker-compose up -d mysql redis; then
-        print_success "Database services started"
-        
-        # Wait for MySQL to be ready
+    print_step "Starting MySQL..."
+    if docker-compose up -d mysql; then
+        print_success "MySQL started"
         wait_for_service "MySQL" 3306 60
-        
-        # Wait for Redis to be ready
-        wait_for_service "Redis" 6379 30
-        
     else
-        print_error "Failed to start database services"
+        print_error "Failed to start MySQL"
         exit 1
     fi
+    
+    print_step "Starting Redis..."
+    if docker-compose up -d redis; then
+        print_success "Redis started"
+        wait_for_service "Redis" 6379 30
+    else
+        print_error "Failed to start Redis"
+        exit 1
+    fi
+    
+    print_step "Starting KrakenD API Gateway..."
+    if docker-compose up -d krakend; then
+        print_success "KrakenD started"
+        wait_for_service "KrakenD" 8080 30
+    else
+        print_error "Failed to start KrakenD"
+        exit 1
+    fi
+    
+    print_step "Starting Nginx..."
+    if docker-compose up -d nginx; then
+        print_success "Nginx started" 
+        wait_for_service "Nginx" 80 30
+    else
+        print_error "Failed to start Nginx"
+        exit 1
+    fi
+    
     echo
 }
 
-start_microservices() {
-    print_header "${ROCKET} STARTING MICROSERVICES"
+start_application_services() {
+    print_header "${ROCKET} STARTING APPLICATION SERVICES"
     
     # Start User Service
     print_step "Starting User Service..."
     if docker-compose up -d user-service; then
         print_success "User Service started"
-        wait_for_service "User Service" 5001 30
+        wait_for_service "User Service" 5000 30
     else
         print_error "Failed to start User Service"
         exit 1
@@ -363,6 +385,16 @@ start_microservices() {
         exit 1
     fi
     
+    # Start Frontend Service
+    print_step "Starting Frontend Service..."
+    if docker-compose up -d frontend-service; then
+        print_success "Frontend Service started"
+        wait_for_service "Frontend Service" 6000 30
+    else
+        print_error "Failed to start Frontend Service"
+        exit 1
+    fi
+    
     # Generate and migrate database
     print_step "Generating and migrating database schema..."
     if npm run drizzle:generate 2>/dev/null && npm run drizzle:migrate 2>/dev/null; then
@@ -374,65 +406,34 @@ start_microservices() {
     echo
 }
 
-start_gateway_and_nginx() {
-    print_header "${DOCKER} STARTING GATEWAY AND NGINX"
+setup_application_dependencies() {
+    print_header "${WEB} SETTING UP APPLICATION DEPENDENCIES"
     
-    print_step "Starting KrakenD API Gateway..."
-    if docker-compose up -d krakend; then
-        print_success "KrakenD started"
-        wait_for_service "KrakenD" 8080 30
+    # Wait a bit for frontend to initialize
+    sleep 5
+    
+    # Install dependencies and build frontend assets
+    print_step "Installing frontend dependencies..."
+    if docker exec -it frontend-service composer install --no-dev --optimize-autoloader; then
+        print_success "Composer dependencies installed"
     else
-        print_error "Failed to start KrakenD"
-        exit 1
+        print_warning "Composer install may have issues"
     fi
     
-    print_step "Starting Nginx..."
-    if docker-compose up -d nginx; then
-        print_success "Nginx started"
-        wait_for_service "Nginx" 80 30
+    print_step "Installing npm dependencies..."
+    if docker exec -it frontend-service npm install; then
+        print_success "npm dependencies installed"
     else
-        print_error "Failed to start Nginx"
-        exit 1
+        print_warning "npm install may have issues"
     fi
-    echo
-}
-
-start_frontend() {
-    print_header "${WEB} STARTING FRONTEND"
     
-    print_step "Starting Frontend service..."
-    if docker-compose up -d frontend-service; then
-        print_success "Frontend service started"
-        
-        # Wait a bit for frontend to initialize
-        sleep 5
-        
-        # Install dependencies and build frontend assets
-        print_step "Installing frontend dependencies..."
-        if docker exec -it frontend-service composer install --no-dev --optimize-autoloader; then
-            print_success "Composer dependencies installed"
-        else
-            print_warning "Composer install may have issues"
-        fi
-        
-        print_step "Installing npm dependencies..."
-        if docker exec -it frontend-service npm install; then
-            print_success "npm dependencies installed"
-        else
-            print_warning "npm install may have issues"
-        fi
-        
-        print_step "Building frontend assets..."
-        if docker exec -it frontend-service npm run build; then
-            print_success "Frontend assets built successfully"
-        else
-            print_warning "Frontend asset build may have issues"
-        fi
-        
+    print_step "Building frontend assets..."
+    if docker exec -it frontend-service npm run build; then
+        print_success "Frontend assets built successfully"
     else
-        print_error "Failed to start Frontend service"
-        exit 1
+        print_warning "Frontend asset build may have issues"
     fi
+    
     echo
 }
 
@@ -552,10 +553,9 @@ main() {
     check_prerequisites
     create_env_files
     build_docker_images
-    start_core_services
-    start_microservices
-    start_frontend
-    start_gateway_and_nginx
+    start_docker_infrastructure
+    start_application_services
+    setup_application_dependencies
     setup_database
     check_services_health
     print_final_info
