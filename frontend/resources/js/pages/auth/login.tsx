@@ -58,7 +58,7 @@ export default function Login() {
                                 </h3>
                                 <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                                     <div>Email: admin@example.com</div>
-                                    <div>Password: password123</div>
+                                    <div>Password: admin123</div>
                                     <div className="text-xs mt-2 opacity-75">Use these credentials to login via JWT</div>
                                 </div>
                             </div>

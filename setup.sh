@@ -162,15 +162,12 @@ DB_USER=deeptech_user
 DB_PASSWORD=deeptech_password
 DB_NAME=deeptech-db
 
-# Service Configuration
 PORT=5001
 NODE_ENV=development
 
-# JWT Configuration
 JWT_SECRET=this-is-jwt-ikay
 JWT_EXPIRES_IN=7d
 
-# CORS Configuration
 CORS_ORIGIN=http://localhost:3000
 EOF
     print_success "user-service .env created"
