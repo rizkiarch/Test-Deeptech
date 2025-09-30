@@ -1,4 +1,4 @@
-# 🚀 DeepTech Microservices Application
+# 🚀 Microservices Application
 
 ## 📋 Deskripsi Proyek
 Aplikasi microservices dengan arsitektur modern menggunakan:
@@ -23,6 +23,13 @@ Pastikan sistem Anda sudah terinstall:
 ---
 
 ## ⚙️ Langkah Instalasi
+
+# Cara Mudah
+Ke Path Folder
+
+chmod +x setup.sh
+
+./setup.sh
 
 ### 📂 **Langkah 1: Setup Environment Variables**
 
@@ -341,37 +348,6 @@ docker exec -it microservices-mysql mysql -u root -proot
 2. Restart KrakenD: `docker-compose restart krakend`
 3. Check service health: `curl http://localhost:8080/api/health`
 
-### **❌ Problem: Git Warning - "could not open directory"**
-**Solution**:
-```bash
-# Jika terjadi warning seperti: "warning: could not open directory '.docker/database/mysql/my.cnf/'"
-# Ini biasanya karena konflik file/directory. Lakukan ini:
-
-# 1. Check file yang bermasalah
-ls -la .docker/database/mysql/
-
-# 2. Hapus file/directory yang corrupted
-rm -rf .docker/database/mysql/my.cnf/
-
-# 3. Atau reset Git index jika diperlukan
-git reset HEAD .docker/database/mysql/my.cnf
-git clean -fd .docker/database/mysql/
-
-# 4. Kemudian add files lagi
-git add .
-```
-
-### **❌ Problem: Permission Error (Linux/WSL)**
-**Solution**:
-```bash
-# Jika terjadi permission error pada Docker
-sudo chmod -R 755 .docker/
-sudo chown -R $USER:$USER .docker/
-
-# Atau jalankan Docker commands dengan sudo
-sudo docker-compose up -d
-```
-
 ---
 
 ## 📚 **Fitur Aplikasi**
@@ -397,7 +373,8 @@ sudo docker-compose up -d
 
 ## 👥 **Tim Development**
 
-Jika Anda mengalami masalah atau memiliki pertanyaan, silakan hubungi ikay
+Jika Anda mengalami masalah atau memiliki pertanyaan, silakan hubungi tim development atau buat issue di repository ini.
+
 ---
 
 **🎉 Selamat! Aplikasi DeepTech sudah siap digunakan!**
