@@ -1,14 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { User, Category } from '@/types';
+import { Category } from '@/types';
 import { useCategories } from '@/hooks/useApi';
 import ApiService from '@/services/api';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { useAuth } from '@/contexts/AuthContext';
 import NavHeader from '@/layouts/app/NavHeader';
 
 export default function CategoriesIndex() {
-    const { user, logout } = useAuth();
     const [currentPage, setCurrentPage] = useState(1);
     const [deleteLoading, setDeleteLoading] = useState<number | null>(null);
     const [successMessage, setSuccessMessage] = useState<string>('');

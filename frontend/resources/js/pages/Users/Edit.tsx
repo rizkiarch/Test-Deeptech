@@ -47,7 +47,6 @@ export default function UserEdit() {
     const [fetchLoading, setFetchLoading] = useState(true);
     const [successMessage, setSuccessMessage] = useState<string>('');
     const [fetchError, setFetchError] = useState<string | null>(null);
-
     const userId = parseInt(window.location.pathname.split('/')[2]);
 
     useEffect(() => {
@@ -55,7 +54,7 @@ export default function UserEdit() {
             try {
                 setFetchLoading(true);
                 const response = await ApiService.get(`/v1/users/${userId}`);
-                const user = response.data;
+                const user = response.data?.data;
                 setUserData(user);
                 setFormData({
                     first_name: user.first_name,
@@ -211,6 +210,7 @@ export default function UserEdit() {
                                                 name="first_name"
                                                 value={formData.first_name}
                                                 onChange={handleChange}
+                                                defaultValue={userData?.first_name || ''}
                                                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.first_name ? 'border-red-500' : 'border-gray-300'
                                                     }`}
                                                 required
@@ -230,6 +230,7 @@ export default function UserEdit() {
                                                 name="last_name"
                                                 value={formData.last_name}
                                                 onChange={handleChange}
+                                                defaultValue={userData?.last_name || ''}
                                                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.last_name ? 'border-red-500' : 'border-gray-300'
                                                     }`}
                                                 required
@@ -250,6 +251,7 @@ export default function UserEdit() {
                                             name="email"
                                             value={formData.email}
                                             onChange={handleChange}
+                                            defaultValue={userData?.email || ''}
                                             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.email ? 'border-red-500' : 'border-gray-300'
                                                 }`}
                                             required
@@ -268,7 +270,7 @@ export default function UserEdit() {
                                                 type="date"
                                                 id="birth_date"
                                                 name="birth_date"
-                                                value={formData.birth_date}
+                                                value={formData.birth_date ? formData.birth_date.split('T')[0] : ''}
                                                 onChange={handleChange}
                                                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.birth_date ? 'border-red-500' : 'border-gray-300'
                                                     }`}
@@ -288,6 +290,7 @@ export default function UserEdit() {
                                                 name="gender"
                                                 value={formData.gender}
                                                 onChange={handleChange}
+                                                defaultValue={userData?.gender || ''}
                                                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${errors.gender ? 'border-red-500' : 'border-gray-300'
                                                     }`}
                                                 required

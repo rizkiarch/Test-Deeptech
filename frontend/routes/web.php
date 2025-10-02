@@ -15,6 +15,10 @@ Route::get('dashboard', function () {
     return Inertia::render('dashboard');
 })->name('dashboard');
 
+Route::get('/stocks', function () {
+    return Inertia::render('Stocks/Index');
+})->name('stocks.index');
+
 Route::get('/categories', function () {
     return Inertia::render('Categories/Index');
 })->name('categories.index');
@@ -82,6 +86,14 @@ Route::get('/users/{id}', function ($id) {
 Route::get('/users/{id}/edit', function ($id) {
     return Inertia::render('Users/Edit', ['id' => $id]);
 })->name('users.edit');
+
+Route::get('/stocks', function () {
+    return Inertia::render('Stocks/Index');
+})->name('stocks.index');
+
+// Route::get('/profile', function () {
+//     return Inertia::render('Profile/Edit');
+// })->name('profile.edit');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
