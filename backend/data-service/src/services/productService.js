@@ -30,7 +30,7 @@ class ProductService {
     }
 
     static async createProduct(productData, req) {
-        const { name, description, image, categoryId, category_id, stock } = productData;
+        const { name, description, image, categoryId, category_id, stock, price } = productData;
         const finalCategoryId = categoryId || category_id;
 
         switch (true) {
@@ -47,6 +47,10 @@ class ProductService {
 
         if (stock && (isNaN(stock) || stock < 0)) {
             return { message: 'Stock must be a non-negative number', statusCode: 400 };
+        }
+
+        if (price && (isNaN(price) || price < 0)) {
+            return { message: 'Price must be a non-negative number', statusCode: 400 };
         }
 
         const productId = await ProductModel.createProduct({
@@ -74,7 +78,7 @@ class ProductService {
             return { message: 'Product not found', statusCode: 404 };
         }
 
-        const { name, description, image, existing_image, remove_image, categoryId, category_id, stock } = productData;
+        const { name, description, image, existing_image, remove_image, categoryId, category_id, stock, price } = productData;
         const finalCategoryId = categoryId || category_id;
 
         let finalImage;
@@ -105,11 +109,16 @@ class ProductService {
             return { message: 'Stock must be a non-negative number', statusCode: 400 };
         }
 
+        if (price !== undefined && (isNaN(price) || price < 0)) {
+            return { message: 'Price must be a non-negative number', statusCode: 400 };
+        }
+
         const cleanProductData = {
             name: name || existingProduct.name,
             description: description || existingProduct.description,
             categoryId: finalCategoryId || existingProduct.category_id,
             stock: stock !== undefined ? stock : existingProduct.stock,
+            price: price !== undefined ? price : existingProduct.price,
             image: finalImage
         };
 

@@ -1,0 +1,1 @@
+ALTER TABLE `categories` ADD COLUMN `code` varchar(15) DEFAULT '' AFTER `id`;

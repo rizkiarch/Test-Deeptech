@@ -8,7 +8,7 @@ Aplikasi microservices dengan arsitektur modern menggunakan:
 - **Database**: MySQL dengan Drizzle ORM
 - **Cache**: Redis
 - **Containerization**: Docker & Docker Compose
--- **Link Website**: http://localhost/login
+- **Link Website**: http://localhost/login
 ---
 
 ## 🛠️ Prasyarat Sistem

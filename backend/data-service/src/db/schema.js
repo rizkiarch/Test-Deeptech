@@ -15,6 +15,7 @@ export const productsTable = mysqlTable("products", {
     image: varchar("image", { length: 500 }),
     categoryId: int("category_id").notNull(),
     stock: int("stock").default(0).notNull(),
+    price: decimal('price', { precision: 10, scale: 2 }).default('0.00'), // ← Tambahkan ini
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
 });

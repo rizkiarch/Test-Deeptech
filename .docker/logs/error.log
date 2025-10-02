@@ -1,0 +1,1 @@
+2025/10/02 20:17:55 [warn] 30#30: *13 a client request body is buffered to a temporary file /var/cache/nginx/client_temp/0000000001, client: 172.18.0.1, server: localhost, request: "POST /api/v1/products HTTP/1.1", host: "localhost", referrer: "http://localhost/products/create"

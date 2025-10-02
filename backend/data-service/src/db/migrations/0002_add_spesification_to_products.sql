@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD COLUMN `spesification` varchar(255) DEFAULT '' AFTER `price`;

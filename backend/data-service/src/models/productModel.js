@@ -28,23 +28,24 @@ class ProductModel {
     }
 
     static async createProduct(productData) {
-        const { name, description, image, categoryId, stock } = productData;
-        const query = 'INSERT INTO products (name, description, image, category_id, stock) VALUES (?, ?, ?, ?, ?)';
-        const [result] = await pool.execute(query, [name, description, image, categoryId, stock || 0]);
+        const { name, description, image, categoryId, stock, price } = productData;
+        const query = 'INSERT INTO products (name, description, image, category_id, stock, price) VALUES (?, ?, ?, ?, ?, ?)';
+        const [result] = await pool.execute(query, [name, description, image, categoryId, stock || 0, price || 0]);
         return result.insertId;
     }
 
     static async updateProduct(id, productData) {
-        const { name, description, image, categoryId, stock } = productData;
+        const { name, description, image, categoryId, stock, price } = productData;
 
         const safeName = name !== undefined ? name : null;
         const safeDescription = description !== undefined ? description : null;
         const safeImage = image !== undefined ? image : null;
         const safeCategoryId = categoryId !== undefined ? categoryId : null;
         const safeStock = stock !== undefined ? stock : null;
+        const safePrice = price !== undefined ? price : null;
 
-        const query = 'UPDATE products SET name = ?, description = ?, image = ?, category_id = ?, stock = ?, updated_at = NOW() WHERE id = ?';
-        const [result] = await pool.execute(query, [safeName, safeDescription, safeImage, safeCategoryId, safeStock, id]);
+        const query = 'UPDATE products SET name = ?, description = ?, image = ?, category_id = ?, stock = ?, price = ?, updated_at = NOW() WHERE id = ?';
+        const [result] = await pool.execute(query, [safeName, safeDescription, safeImage, safeCategoryId, safeStock, safePrice, id]);
         return result.affectedRows > 0;
     }
 
